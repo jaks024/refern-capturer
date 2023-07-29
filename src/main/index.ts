@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow } from 'electron'
+import { app, shell, BrowserWindow, desktopCapturer, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
@@ -15,6 +15,11 @@ function createWindow(): void {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false
     }
+  })
+
+  ipcMain.handle('get-sources', async () => {
+    const result = await desktopCapturer.getSources({ types: ['window', 'screen'] })
+    return result
   })
 
   mainWindow.on('ready-to-show', () => {

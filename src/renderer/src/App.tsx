@@ -1,5 +1,8 @@
+import { Dashboard } from './features/dashboard/Dashboard'
+import './assets/index.css'
+
 function App(): JSX.Element {
-  return <div>root</div>
+  return <Dashboard />
 }
 
 export default App

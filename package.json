@@ -22,7 +22,8 @@
   "dependencies": {
     "@electron-toolkit/preload": "^2.0.0",
     "@electron-toolkit/utils": "^1.0.2",
-    "axios": "^1.4.0"
+    "axios": "^1.4.0",
+    "module-alias": "^2.2.3"
   },
   "devDependencies": {
     "@electron-toolkit/tsconfig": "^1.0.1",
