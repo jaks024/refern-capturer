@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react'
 
 export interface CaptureControlProps {
-  screens: string[]
-  onCaptureClicked: () => void
+  onCaptureClicked: (sourceId: string) => void
 }
 
 export interface Source {
@@ -32,6 +31,8 @@ export const CaptureControl = ({ onCaptureClicked }: CaptureControlProps) => {
     return s.map((source) => {
       return (
         <button
+          key={source.id}
+          type="button"
           className={`hover:bg-neutral-800 transition-colors text-left p-1 ${
             source.id === selectedSource?.id ? 'bg-neutral-700' : ''
           }`}
@@ -50,6 +51,7 @@ export const CaptureControl = ({ onCaptureClicked }: CaptureControlProps) => {
       <button
         type="button"
         className="bg-neutral-800 w-1/3 hover:bg-indigo-600 border border-neutral-700 hover:border-indigo-500  transition-colors rounded-md font-bold"
+        onClick={() => (selectedSource ? onCaptureClicked(selectedSource?.id) : () => {})}
       >
         Capture
       </button>

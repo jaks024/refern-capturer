@@ -1,7 +1,8 @@
-import { app, shell, BrowserWindow, desktopCapturer, ipcMain } from 'electron'
+import { app, shell, BrowserWindow, globalShortcut } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
+import { captureHandler } from './captureHandler'
 
 function createWindow(): void {
   // Create the browser window.
@@ -17,10 +18,7 @@ function createWindow(): void {
     }
   })
 
-  ipcMain.handle('get-sources', async () => {
-    const result = await desktopCapturer.getSources({ types: ['window', 'screen'] })
-    return result
-  })
+  captureHandler.addHandles()
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
@@ -61,6 +59,16 @@ app.whenReady().then(() => {
     // dock icon is clicked and there are no other windows open.
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
+
+  captureHandler.registerKey()
+})
+
+app.on('will-quit', () => {
+  // Unregister a shortcut.
+  globalShortcut.unregister('CommandOrControl+Shift+S')
+
+  // Unregister all shortcuts.
+  globalShortcut.unregisterAll()
 })
 
 // Quit when all windows are closed, except on macOS. There, it's common

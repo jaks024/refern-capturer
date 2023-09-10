@@ -1,9 +1,11 @@
-import { contextBridge, desktopCapturer } from 'electron'
+import { contextBridge } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 
 // Custom APIs for renderer
 const api = {
-  getSources: () => ipcRenderer.invoke('get-sources')
+  getSources: () => ipcRenderer.invoke('get-sources'),
+  captureSource: (sourceId) => ipcRenderer.invoke('capture-source', { sourceId }),
+  getAllCaptureBuffer: () => ipcRenderer.invoke('get-all-capture-buffer')
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to
