@@ -1,19 +1,28 @@
-import { ElectronAPI } from '@electron-toolkit/preload'
+import { ElectronAPI } from '@electron-toolkit/preload';
+
+interface ImageCache {
+  id: string;
+  base64: string;
+}
+interface Source {
+  id: string;
+  name: string;
+}
 
 declare global {
   interface API {
-    getSources: () => Promise<Electron.DesktopCapturerSource[]>
+    getSources: () => Promise<Source[]>;
 
-    hasNewCapture: () => boolean
-    getAllCaptureBuffer: () => Buffer[]
-    deleteCaptures: (imageIds: string[]) => void
+    hasNewCapture: () => Promise<boolean>;
+    getAllCaptureBuffer: () => Promise<ImageCache[]>;
+    deleteCaptures: (imageIds: string[]) => void;
 
-    setCaptureKeybind: (keybind: string) => void
-    captureSource: (sourceId: string) => void
-    updateSource: () => void
+    setCaptureKeybind: (keybind: string) => void;
+    captureSource: () => Promise<true>;
+    setCaptureSource: (newSource: string) => void;
   }
   interface Window {
-    electron: ElectronAPI
-    api: API
+    electron: ElectronAPI;
+    api: API;
   }
 }

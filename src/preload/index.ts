@@ -1,32 +1,34 @@
-import { contextBridge } from 'electron'
-import { electronAPI } from '@electron-toolkit/preload'
+import { contextBridge } from 'electron';
+import { electronAPI } from '@electron-toolkit/preload';
 
 // Custom APIs for renderer
 const api = {
   getSources: () => ipcRenderer.invoke('get-sources'),
-  captureSource: (sourceId) => ipcRenderer.invoke('capture-source', { sourceId }),
-  getAllCaptureBuffer: () => ipcRenderer.invoke('get-all-capture-buffer')
-}
+  captureSource: () => ipcRenderer.invoke('capture-source'),
+  getAllCaptureBuffer: () => ipcRenderer.invoke('get-all-capture-buffer'),
+  setCaptureSource: (newSource: string) => ipcRenderer.invoke('set-capture-source', { newSource }),
+  hasNewCapture: () => ipcRenderer.invoke('has-new-capture'),
+};
 
 // Use `contextBridge` APIs to expose Electron APIs to
 // renderer only if context isolation is enabled, otherwise
 // just add to the DOM global.
 if (process.contextIsolated) {
   try {
-    contextBridge.exposeInMainWorld('electron', electronAPI)
-    contextBridge.exposeInMainWorld('api', api)
+    contextBridge.exposeInMainWorld('electron', electronAPI);
+    contextBridge.exposeInMainWorld('api', api);
   } catch (error) {
-    console.error(error)
+    console.error(error);
   }
 } else {
   // @ts-ignore (define in dts)
-  window.electron = electronAPI
+  window.electron = electronAPI;
   // @ts-ignore (define in dts)
-  window.api = api
+  window.api = api;
 }
 
 // In the preload script.
-import { ipcRenderer } from 'electron'
+import { ipcRenderer } from 'electron';
 
 ipcRenderer.on('SET_SOURCE', async (event, sourceId) => {
   try {
@@ -40,24 +42,24 @@ ipcRenderer.on('SET_SOURCE', async (event, sourceId) => {
           minWidth: 1280,
           maxWidth: 1280,
           minHeight: 720,
-          maxHeight: 720
-        }
-      }
-    })
-    handleStream(stream)
+          maxHeight: 720,
+        },
+      },
+    });
+    handleStream(stream);
   } catch (e) {
-    handleError(e)
+    handleError(e);
   }
-})
+});
 
 function handleStream(stream) {
-  const video = document.querySelector('video')
+  const video = document.querySelector('video');
   if (video) {
-    video.srcObject = stream
-    video.onloadedmetadata = (e) => video.play()
+    video.srcObject = stream;
+    video.onloadedmetadata = (e) => video.play();
   }
 }
 
 function handleError(e) {
-  console.log(e)
+  console.log(e);
 }
