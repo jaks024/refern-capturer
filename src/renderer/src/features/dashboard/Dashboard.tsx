@@ -1,9 +1,7 @@
 import { useEffect, useState } from 'react';
 import { CaptureControl, Source } from '../capture/CaptureControl';
-import { UploadControl } from '../upload/UploadControl';
 import { ImageCache, useRefresh } from './useRefresh';
 import { PreviewImage } from './PreviewImage';
-import { useSources } from '../capture/useSources';
 import SimpleBar from 'simplebar-react';
 import { useHasNewCapture } from './useHasNewCapture';
 
@@ -64,6 +62,13 @@ export const Dashboard = () => {
   };
 
   const CacheImages = () => {
+    if (!cache || cache.length == 0) {
+      return (
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-neutral-500 font-bold text-sm m-auto">
+          No captures!
+        </div>
+      );
+    }
     return cache?.map((x) => {
       return <PreviewImage key={x.id} imgBase64={x.base64} />;
     });
@@ -90,9 +95,6 @@ export const Dashboard = () => {
             </div>
           </SimpleBar>
 
-          {/* <div className="absolute top-0">
-            <UploadControl />
-          </div> */}
           {hasNewCapture && !isRefetched ? (
             <div className="absolute z-10 top-0 left-0 w-full h-full animate-fadeIn">
               <div className="absolute z-20 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">

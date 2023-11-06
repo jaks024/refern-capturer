@@ -10,6 +10,7 @@ export interface ImageCache {
 const captureCache: ImageCache[] = [];
 let currentSource: string = '';
 let newCapture: boolean = false;
+let captureKeybind: string = 'PrintScreen';
 
 const capture = async (sourceId: string) => {
   const sources = await desktopCapturer.getSources({
@@ -34,6 +35,11 @@ const addToCache = (buffer: Buffer | undefined) => {
   }
 };
 
+const onEventCapture = async () => {
+  const content = await capture(currentSource);
+  return addToCache(content);
+};
+
 const AddHandles = () => {
   ipcMain.handle('get-sources', async () => {
     const result = await desktopCapturer.getSources({ types: ['window', 'screen'] });
@@ -47,15 +53,14 @@ const AddHandles = () => {
     return data;
   });
 
-  ipcMain.handle('set-capture-source', (event: IpcMainInvokeEvent, args: { newSource: string }) => {
+  ipcMain.handle('set-capture-source', (_: IpcMainInvokeEvent, args: { newSource: string }) => {
     console.log(args);
     currentSource = args.newSource;
     console.log('updated source', currentSource);
   });
 
-  ipcMain.handle('capture-source', async (event: IpcMainInvokeEvent) => {
-    const content = await capture(currentSource);
-    return addToCache(content);
+  ipcMain.handle('capture-source', async (_: IpcMainInvokeEvent) => {
+    return await onEventCapture();
   });
 
   ipcMain.handle('get-all-capture-buffer', () => {
@@ -67,22 +72,36 @@ const AddHandles = () => {
   ipcMain.handle('has-new-capture', () => {
     return newCapture;
   });
+
+  ipcMain.handle('set-capture-keybind', (_: IpcMainInvokeEvent, args: { keybind: string }) => {
+    if (args.keybind == captureKeybind) {
+      return true;
+    }
+    console.log('called', args.keybind);
+    const ret = globalShortcut.register(args.keybind, onEventCapture);
+    if (ret) {
+      globalShortcut.unregister(captureKeybind);
+      captureKeybind = args.keybind;
+      console.log('set capture keybind', ret);
+    }
+    return ret;
+  });
+
+  ipcMain.handle('get-capture-keybind', () => {
+    return captureKeybind;
+  });
 };
 
 const RegisterKeybind = () => {
   // Register a 'CommandOrControl+X' shortcut listener.
-  const ret = globalShortcut.register('CommandOrControl+Shift+S', async () => {
-    console.log('CommandOrControl+Shift+S is pressed');
-    const content = await capture(currentSource);
-    addToCache(content);
-  });
+  const ret = globalShortcut.register(captureKeybind, onEventCapture);
 
   if (!ret) {
     console.log('registration failed');
   }
 
   // Check whether a shortcut is registered.
-  console.log(globalShortcut.isRegistered('CommandOrControl+Shift+S'));
+  console.log(globalShortcut.isRegistered(captureKeybind));
 };
 
 export const captureHandler = {

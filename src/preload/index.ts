@@ -8,6 +8,8 @@ const api = {
   getAllCaptureBuffer: () => ipcRenderer.invoke('get-all-capture-buffer'),
   setCaptureSource: (newSource: string) => ipcRenderer.invoke('set-capture-source', { newSource }),
   hasNewCapture: () => ipcRenderer.invoke('has-new-capture'),
+  setCaptureKeybind: (keybind: string) => ipcRenderer.invoke('set-capture-keybind', { keybind }),
+  getCaptureKeybind: () => ipcRenderer.invoke('get-capture-keybind'),
 };
 
 // Use `contextBridge` APIs to expose Electron APIs to

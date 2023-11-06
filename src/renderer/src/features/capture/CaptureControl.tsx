@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSources } from './useSources';
 import { SourceItem } from './SourceItem';
 import SimpleBar from 'simplebar-react';
 import 'simplebar-react/dist/simplebar.min.css';
+import { CaptureKeybinder } from './CaptureKeybinder';
 
 export interface CaptureControlProps {
   selectedSource: Source | undefined;
@@ -21,6 +22,7 @@ export const CaptureControl = ({
   onCaptureClicked,
 }: CaptureControlProps) => {
   const [sources, setSources] = useState<Source[]>([]);
+  const [shortcut, setShortcut] = useState('');
   console.log('RERENDER CAPTURE');
   const { data: sourceData, refetch: refetchSource } = useSources({
     config: {
@@ -54,15 +56,20 @@ export const CaptureControl = ({
 
   return (
     <div className="w-[16rem] p-2 gap-4 h-full flex flex-col pr-0 border-r border-neutral-800">
-      <div className="mr-2">
+      <div className="mr-2 flex flex-col gap-1">
         <button
           type="button"
           className="bg-neutral-800 w-full min-h-[6rem] hover:bg-indigo-600 border border-neutral-700 hover:border-indigo-500  transition-colors rounded-md font-bold"
           onClick={() => (selectedSource ? onCaptureClicked(selectedSource?.id) : () => {})}
         >
-          Capture
-          <div className="text-xs text-neutral-500">Ctrl + Shift + S </div>
+          Capture Source
+          <div className="text-xs text-neutral-500">{shortcut}</div>
         </button>
+        <CaptureKeybinder
+          onBind={(keybind: string) => {
+            setShortcut(keybind);
+          }}
+        />
       </div>
       <div className="flex flex-col gap-1 grow overflow-hidden h-[100% - 96px]">
         <div className="font-black text-xs text-neutral-400 flex justify-between pr-2">
