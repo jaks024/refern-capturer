@@ -17,7 +17,7 @@ export const SourceItem = ({ source, isSelected, onSelectSource }: SourceItemPro
       }`}
       onClick={() => onSelectSource(source)}
     >
-      <div className="text-start font-semibold">{source.name}</div>
+      <div className="text-start font-semibold pr-2">{source.name}</div>
     </button>
   );
 };

@@ -2,15 +2,24 @@ import { ipcMain, desktopCapturer, IpcMainInvokeEvent, globalShortcut } from 'el
 import { uInt8ArrayToBase64 } from './helper';
 import { v4 as uuidv4 } from 'uuid';
 
+import Store from 'electron-store';
+
 export interface ImageCache {
   id: string;
   base64: string;
 }
 
+const store = new Store();
+
 const captureCache: ImageCache[] = [];
 let currentSource: string = '';
 let newCapture: boolean = false;
-let captureKeybind: string = 'PrintScreen';
+
+const STORE_KEYBIND = 'capture.keybind';
+if (!store.has(STORE_KEYBIND)) {
+  store.set(STORE_KEYBIND, 'PrintScreen');
+}
+let captureKeybind: string = store.get(STORE_KEYBIND) as string;
 
 const capture = async (sourceId: string) => {
   const sources = await desktopCapturer.getSources({
@@ -82,6 +91,7 @@ const AddHandles = () => {
     if (ret) {
       globalShortcut.unregister(captureKeybind);
       captureKeybind = args.keybind;
+      store.set(STORE_KEYBIND, args.keybind);
       console.log('set capture keybind', ret);
     }
     return ret;

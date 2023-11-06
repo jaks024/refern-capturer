@@ -47,7 +47,10 @@ export const CaptureKeybinder = ({ onBind }: CaptureKeybinderProp) => {
 
   const onBindClick = () => {
     if (isListeningRef.current) {
-      mutate({ keybind: getSequence() });
+      const seq = getSequence();
+      if (seq.length > 0) {
+        mutate({ keybind: seq });
+      }
     }
     setKeys(new Set());
     setIsListening(!isListening);
