@@ -63,7 +63,9 @@ export const CaptureControl = ({
           onClick={() => (selectedSource ? onCaptureClicked(selectedSource?.id) : () => {})}
         >
           Capture Source
-          <div className="text-xs text-neutral-500">{shortcut}</div>
+          <div className="text-xs text-neutral-500 font-semibold">
+            or press <span className="font-black">{shortcut}</span>
+          </div>
         </button>
         <CaptureKeybinder
           onBind={(keybind: string) => {

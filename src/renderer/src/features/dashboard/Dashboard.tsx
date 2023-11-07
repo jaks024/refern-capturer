@@ -70,7 +70,24 @@ export const Dashboard = () => {
       );
     }
     return cache?.map((x) => {
-      return <PreviewImage key={x.id} imgBase64={x.base64} />;
+      return (
+        <PreviewImage
+          key={x.id}
+          img={{
+            id: x.id,
+            base64: x.base64,
+            data: {
+              name: '',
+              description: '',
+              sourceName: '',
+              sourceUrl: '',
+              tags: [],
+            },
+          }}
+          onClickRemove={() => {}}
+          onChange={() => {}}
+        />
+      );
     });
   };
 
