@@ -1,26 +1,36 @@
 import { ElectronAPI } from '@electron-toolkit/preload';
 
-interface ImageCache {
-  id: string;
-  base64: string;
-}
-interface Source {
-  id: string;
-  name: string;
-}
-
 declare global {
+  interface ImageCache {
+    id: string;
+    base64: string;
+  }
+  interface Source {
+    id: string;
+    name: string;
+  }
+  interface ImageData {
+    id: string;
+    name: string;
+    description: string;
+    source: string;
+    sourceUrl: string;
+    tags: string[];
+    base64: string;
+  }
+
   interface API {
     getSources: () => Promise<Source[]>;
 
     hasNewCapture: () => Promise<boolean>;
-    getAllCaptureBuffer: () => Promise<ImageCache[]>;
-    deleteCaptures: (imageIds: string[]) => void;
+    getAllSavedCaptures: () => Promise<ImageData[]>;
+    getAllShortcutCaptures: () => Promise<ImageData[]>;
+    deleteCaptures: (imageIds: string[]) => Promise<void>;
+    captureSource: () => Promise<ImageData>;
+    setCaptureSource: (newSource: string) => Promise<void>;
 
     setCaptureKeybind: (keybind: string) => Promise<boolean>;
     getCaptureKeybind: () => Promise<string>;
-    captureSource: () => Promise<true>;
-    setCaptureSource: (newSource: string) => void;
   }
   interface Window {
     electron: ElectronAPI;

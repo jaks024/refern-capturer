@@ -4,10 +4,14 @@ import { electronAPI } from '@electron-toolkit/preload';
 // Custom APIs for renderer
 const api = {
   getSources: () => ipcRenderer.invoke('get-sources'),
-  captureSource: () => ipcRenderer.invoke('capture-source'),
-  getAllCaptureBuffer: () => ipcRenderer.invoke('get-all-capture-buffer'),
   setCaptureSource: (newSource: string) => ipcRenderer.invoke('set-capture-source', { newSource }),
+
+  getAllSavedCaptures: () => ipcRenderer.invoke('get-all-saved-captures'),
+  getAllShortcutCaptures: () => ipcRenderer.invoke('get-all-shortcut-captures'),
+  deleteCaptures: (imageIds: string[]) => ipcRenderer.invoke('delete-captures', { imageIds }),
+  captureSource: () => ipcRenderer.invoke('capture-source'),
   hasNewCapture: () => ipcRenderer.invoke('has-new-capture'),
+
   setCaptureKeybind: (keybind: string) => ipcRenderer.invoke('set-capture-keybind', { keybind }),
   getCaptureKeybind: () => ipcRenderer.invoke('get-capture-keybind'),
 };

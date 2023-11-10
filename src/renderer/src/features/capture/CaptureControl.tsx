@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import { useSources } from './useSources';
 import { SourceItem } from './SourceItem';
 import SimpleBar from 'simplebar-react';
 import 'simplebar-react/dist/simplebar.min.css';
 import { CaptureKeybinder } from './CaptureKeybinder';
+import { useGetSources } from '../hooks/useGetSources';
 
 export interface CaptureControlProps {
   selectedSource: Source | undefined;
@@ -24,7 +24,7 @@ export const CaptureControl = ({
   const [sources, setSources] = useState<Source[]>([]);
   const [shortcut, setShortcut] = useState('');
   console.log('RERENDER CAPTURE');
-  const { data: sourceData, refetch: refetchSource } = useSources({
+  const { data: sourceData, refetch: refetchSource } = useGetSources({
     config: {
       refetchOnWindowFocus: true,
     },

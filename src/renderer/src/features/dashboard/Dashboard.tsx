@@ -1,21 +1,43 @@
 import { useEffect, useState } from 'react';
 import { CaptureControl, Source } from '../capture/CaptureControl';
-import { ImageCache, useRefresh } from './useRefresh';
 import { PreviewImage } from './PreviewImage';
 import SimpleBar from 'simplebar-react';
-import { useHasNewCapture } from './useHasNewCapture';
+import { useHasNewCapture } from '../hooks/useHasNewCapture';
+import { useGetAllSavedCaptures } from '../hooks/useGetAllSavedCaptures';
+import { ImageData } from '../types';
+import { useGetAllShortcutCaptures } from '../hooks/useGetAllShortcutCaptures';
+import { useCaptureSource } from '../hooks/useCaptureSource';
+import { useSetCaptureSource } from '../hooks/useSetCaptureSource';
+import { useDeleteCaptures } from '../hooks/useDeleteCaptures';
 
 export const Dashboard = () => {
-  const [cache, setCache] = useState<ImageCache[]>();
+  const [cache, setCache] = useState<Record<string, ImageData>>({});
   const [selectedSource, setSelectedSource] = useState<Source | undefined>();
-  const [isRefetched, setIsRefetched] = useState(false);
   const [hasNewCapture, setHasNewCapture] = useState(false);
-  const { data: refreshData, refetch } = useRefresh({
-    config: {
-      refetchInterval: false,
-      staleTime: Infinity,
-      refetchOnWindowFocus: false,
-      enabled: false,
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+
+  const {
+    data: allSavedCaptures,
+    isFetched: isFetchedAllSavedCaptures,
+    refetch: fetchAllSavedCaptures,
+  } = useGetAllSavedCaptures({
+    enabled: false,
+  });
+
+  const {
+    data: allShortcutCaptures,
+    isFetching: isFetchingAllShortcutCapture,
+    refetch: fetchAllShortcutCapture,
+  } = useGetAllShortcutCaptures({
+    enabled: false,
+  });
+
+  const { mutate: captureSource } = useCaptureSource({
+    onSuccess(data, _, __) {
+      setCache((prev) => {
+        return { ...prev, [data.id]: data };
+      });
+      console.log('CAPTURE SUCCESS');
     },
   });
 
@@ -24,33 +46,63 @@ export const Dashboard = () => {
       refetchInterval: 1 * 1000,
     },
   });
-  console.log(hasNewCapture, isRefetched);
+
+  const { mutate: setCaptureSource } = useSetCaptureSource();
+
+  const { mutate: deleteCaptures } = useDeleteCaptures();
 
   useEffect(() => {
-    if (refreshData) {
-      console.log('refreshed');
-      setCache(refreshData);
-      setIsRefetched(false);
+    if (!isInitialLoad) {
+      return;
     }
-  }, [refreshData]);
+    if (isFetchedAllSavedCaptures && allSavedCaptures) {
+      setCache(
+        allSavedCaptures.reduce((acc, x) => {
+          return {
+            ...acc,
+            [x.id]: x,
+          };
+        }, {}),
+      );
+      setIsInitialLoad(false);
+      console.log('SET CACHE FROM SAVED CAPTURES');
+    } else {
+      console.log('FETCHED ALL SAVED CAPTURES');
+      fetchAllSavedCaptures();
+    }
+  }, [isInitialLoad, isFetchedAllSavedCaptures, allSavedCaptures]);
 
   useEffect(() => {
-    if (!isRefetched && newCapture !== undefined) {
+    if (allShortcutCaptures) {
+      console.log('refreshed');
+      setCache((prev) => {
+        return {
+          ...prev,
+          ...allShortcutCaptures.reduce((acc, x) => {
+            return {
+              ...acc,
+              [x.id]: x,
+            };
+          }, {}),
+        };
+      });
+    }
+  }, [allShortcutCaptures]);
+
+  useEffect(() => {
+    if (newCapture !== undefined) {
       setHasNewCapture(newCapture);
     }
   }, [newCapture]);
 
   const handleOnCaptureClicked = () => {
     console.log('on click capture');
-    setIsRefetched(true);
-    window.api.captureSource().then(() => {
-      refetch();
-      console.log('REFETCHED');
-    });
+    captureSource({});
   };
 
   const handleOnRefreshClicked = async () => {
-    refetch();
+    setHasNewCapture(false);
+    fetchAllShortcutCapture();
   };
 
   const handleOnSelectSourceClicked = (newSource: Source) => {
@@ -58,33 +110,39 @@ export const Dashboard = () => {
       return;
     }
     setSelectedSource(newSource);
-    window.api.setCaptureSource(newSource.id);
+    setCaptureSource({ newSourceId: newSource.id });
   };
 
   const CacheImages = () => {
-    if (!cache || cache.length == 0) {
+    if (!cache || Object.keys(cache).length == 0) {
       return (
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-neutral-500 font-bold text-sm m-auto">
           No captures!
         </div>
       );
     }
-    return cache?.map((x) => {
+    return Object.entries(cache)?.map(([id, x]) => {
       return (
         <PreviewImage
-          key={x.id}
+          key={id}
           img={{
             id: x.id,
             base64: x.base64,
             data: {
-              name: '',
-              description: '',
-              sourceName: '',
-              sourceUrl: '',
-              tags: [],
+              name: x.name,
+              description: x.description,
+              sourceName: x.source,
+              sourceUrl: x.sourceUrl,
+              tags: x.tags,
             },
           }}
-          onClickRemove={() => {}}
+          onClickRemove={() => {
+            deleteCaptures({ ids: [id] });
+            setCache((prev) => {
+              delete prev[id];
+              return { ...prev };
+            });
+          }}
           onChange={() => {}}
         />
       );
@@ -112,17 +170,25 @@ export const Dashboard = () => {
             </div>
           </SimpleBar>
 
-          {hasNewCapture && !isRefetched ? (
+          {hasNewCapture || isFetchingAllShortcutCapture ? (
             <div className="absolute z-10 top-0 left-0 w-full h-full animate-fadeIn">
               <div className="absolute z-20 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-                <div className="p-2 font-bold text-xs">new images captured through shortcut</div>
-                <button
-                  type="button"
-                  className="flex gap-1 p-2 justify-center bg-neutral-800 w-full hover:bg-indigo-600 border border-neutral-700 hover:border-indigo-500  transition-colors rounded-md font-bold"
-                  onClick={handleOnRefreshClicked}
-                >
-                  <span className=" leading-snug text-sm">refresh to see!</span>
-                </button>
+                {isFetchingAllShortcutCapture ? (
+                  <div className="p-2 font-bold text-xs">fetching...</div>
+                ) : (
+                  <>
+                    <div className="p-2 font-bold text-xs">
+                      new images captured through shortcut
+                    </div>
+                    <button
+                      type="button"
+                      className="flex gap-1 p-2 justify-center bg-neutral-800 w-full hover:bg-indigo-600 border border-neutral-700 hover:border-indigo-500  transition-colors rounded-md font-bold"
+                      onClick={handleOnRefreshClicked}
+                    >
+                      <span className=" leading-snug text-sm">refresh to see!</span>
+                    </button>
+                  </>
+                )}
               </div>
               <div className="absolute top-0 left-0 w-full h-full bg-neutral-900 opacity-80" />
             </div>

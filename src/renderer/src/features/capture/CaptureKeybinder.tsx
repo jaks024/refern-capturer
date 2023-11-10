@@ -1,7 +1,7 @@
 import { useClickOutside } from '@renderer/hooks/useClickOutside';
 import { useEffect, useRef, useState } from 'react';
-import { useSetCaptureKeybind } from './useSetCaptureKeybind';
-import { useSequence } from './useSequence';
+import { useSetCaptureKeybind } from '../hooks/useSetCaptureKeybind';
+import { useGetCaptureKeybind } from '../hooks/useGetCaptureKeybind';
 
 export interface CaptureKeybinderProp {
   onBind: (keybind: string) => void;
@@ -14,7 +14,7 @@ export const CaptureKeybinder = ({ onBind }: CaptureKeybinderProp) => {
   const ref = useRef(null);
   const isListeningRef = useRef(isListening);
 
-  const { data: fetchedSequence, refetch } = useSequence({});
+  const { data: fetchedSequence, refetch } = useGetCaptureKeybind({});
   const { mutate } = useSetCaptureKeybind({
     config: {
       onSuccess() {
