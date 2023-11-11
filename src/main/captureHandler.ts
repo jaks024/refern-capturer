@@ -187,6 +187,12 @@ const AddHandles = () => {
     store.set(STORE_IMAGE_META, metas);
     store.set(STORE_IMAGE_RAWS, raws);
   });
+
+  ipcMain.handle('update-cache-raw', (_: IpcMainInvokeEvent, args: { id: string; raw: string }) => {
+    const raws = store.get(STORE_IMAGE_RAWS);
+    raws[args.id] = args.raw;
+    store.set(STORE_IMAGE_RAWS, raws);
+  });
 };
 
 const RegisterKeybind = () => {

@@ -28,6 +28,7 @@ declare global {
     deleteCaptures: (imageIds: string[]) => Promise<void>;
     captureSource: () => Promise<ImageData>;
     setCaptureSource: (newSource: string) => Promise<void>;
+    updateCacheRaw: (id: string, raw: string) => Promise<void>;
 
     setCaptureKeybind: (keybind: string) => Promise<boolean>;
     getCaptureKeybind: () => Promise<string>;

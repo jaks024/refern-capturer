@@ -26,6 +26,7 @@
     "axios": "^1.4.0",
     "electron-store": "^8.1.0",
     "module-alias": "^2.2.3",
+    "react-cropper": "^2.3.3",
     "simplebar-react": "^3.2.4",
     "uuid": "^9.0.1"
   },

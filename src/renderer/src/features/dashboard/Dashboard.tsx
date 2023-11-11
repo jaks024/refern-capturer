@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { CaptureControl, Source } from '../capture/CaptureControl';
 import { PreviewImage } from './PreviewImage';
 import SimpleBar from 'simplebar-react';
@@ -9,6 +9,10 @@ import { useGetAllShortcutCaptures } from '../hooks/useGetAllShortcutCaptures';
 import { useCaptureSource } from '../hooks/useCaptureSource';
 import { useSetCaptureSource } from '../hooks/useSetCaptureSource';
 import { useDeleteCaptures } from '../hooks/useDeleteCaptures';
+import { Cropper, ReactCropperElement } from 'react-cropper';
+import { FormButton } from '../form/FormButton';
+import { useUpdateCacheRaw } from '../hooks/useUpdateCacheRaw';
+import 'cropperjs/dist/cropper.css';
 
 export const Dashboard = () => {
   const [cache, setCache] = useState<Record<string, ImageData>>({});
@@ -16,6 +20,9 @@ export const Dashboard = () => {
   const [hasNewCapture, setHasNewCapture] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [selectedCache, setSelectedCache] = useState<Set<string>>(new Set());
+  const [croppingId, setCroppingId] = useState('');
+
+  const cropperRef = useRef<ReactCropperElement>(null);
 
   const {
     data: allSavedCaptures,
@@ -24,7 +31,6 @@ export const Dashboard = () => {
   } = useGetAllSavedCaptures({
     enabled: false,
   });
-
   const {
     data: allShortcutCaptures,
     isFetching: isFetchingAllShortcutCapture,
@@ -32,7 +38,6 @@ export const Dashboard = () => {
   } = useGetAllShortcutCaptures({
     enabled: false,
   });
-
   const { mutate: captureSource } = useCaptureSource({
     onSuccess(data, _, __) {
       setCache((prev) => {
@@ -41,16 +46,14 @@ export const Dashboard = () => {
       console.log('CAPTURE SUCCESS');
     },
   });
-
   const { data: newCapture } = useHasNewCapture({
     config: {
       refetchInterval: 1 * 1000,
     },
   });
-
   const { mutate: setCaptureSource } = useSetCaptureSource();
-
   const { mutate: deleteCaptures } = useDeleteCaptures();
+  const { mutate: updateCacheRaw } = useUpdateCacheRaw();
 
   useEffect(() => {
     if (!isInitialLoad) {
@@ -114,6 +117,20 @@ export const Dashboard = () => {
     setCaptureSource({ newSourceId: newSource.id });
   };
 
+  const getCropData = () => {
+    if (typeof cropperRef.current?.cropper !== 'undefined') {
+      const url = cropperRef.current?.cropper.getCroppedCanvas().toDataURL();
+      const base64 = url.substring(url.indexOf(',') + 1).trim();
+
+      setCache((prev) => {
+        prev[croppingId].base64 = base64;
+        return { ...prev };
+      });
+      updateCacheRaw({ id: croppingId, raw: base64 });
+      setCroppingId('');
+    }
+  };
+
   const CacheImages = () => {
     if (!cache || Object.keys(cache).length == 0) {
       return (
@@ -151,13 +168,16 @@ export const Dashboard = () => {
               });
             }
           }}
-          onClickRemove={() => {
-            deleteCaptures({ ids: [id] });
-            setCache((prev) => {
-              delete prev[id];
-              return { ...prev };
-            });
+          onCrop={() => {
+            setCroppingId(id);
           }}
+          // onClickRemove={() => {
+          //   deleteCaptures({ ids: [id] });
+          //   setCache((prev) => {
+          //     delete prev[id];
+          //     return { ...prev };
+          //   });
+          // }}
         />
       );
     });
@@ -211,6 +231,38 @@ export const Dashboard = () => {
           )}
         </div>
       </div>
+
+      {croppingId.length > 0 ? (
+        <div className="absolute top-0 left-0 w-full h-full z-20">
+          <div className="absolute top-0 left-0 w-full h-full bg-neutral-950 opacity-80" />
+
+          <div className="w-full h-full p-10 pb-20 z-20 ">
+            <Cropper
+              className="w-full h-full bg-neutral-600 border-outline-400 outline outline-1 rounded-md"
+              ref={cropperRef}
+              src={`data:image/png;base64, ${cache[croppingId].base64}`}
+              viewMode={1}
+              initialAspectRatio={1}
+              minCropBoxHeight={10}
+              minCropBoxWidth={10}
+              background={false}
+              responsive={true}
+              autoCropArea={0.5}
+              checkOrientation={false} // https://github.com/fengyuanchen/cropperjs/issues/671
+              guides={true}
+              movable={false}
+              rotatable={false}
+              zoomable={false}
+            />
+          </div>
+          <div className="absolute bottom-6 left-1/2 flex -translate-x-1/2 gap-5">
+            <FormButton onClick={() => setCroppingId('')} text="Cancel" />
+            <FormButton onClick={getCropData} text="Crop Image" />
+          </div>
+        </div>
+      ) : (
+        <></>
+      )}
     </div>
   );
 };

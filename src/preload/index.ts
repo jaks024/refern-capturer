@@ -11,6 +11,7 @@ const api = {
   deleteCaptures: (imageIds: string[]) => ipcRenderer.invoke('delete-captures', { imageIds }),
   captureSource: () => ipcRenderer.invoke('capture-source'),
   hasNewCapture: () => ipcRenderer.invoke('has-new-capture'),
+  updateCacheRaw: (id: string, raw: string) => ipcRenderer.invoke('update-cache-raw', { id, raw }),
 
   setCaptureKeybind: (keybind: string) => ipcRenderer.invoke('set-capture-keybind', { keybind }),
   getCaptureKeybind: () => ipcRenderer.invoke('get-capture-keybind'),

@@ -16,9 +16,9 @@ export interface PreviewImageProps {
   img: PreviewImage;
   isSelected: boolean;
   onSelect: () => void;
-  onClickRemove: () => void;
+  onCrop: () => void;
 }
-export const PreviewImage = ({ img, isSelected, onSelect, onClickRemove }: PreviewImageProps) => {
+export const PreviewImage = ({ img, isSelected, onSelect, onCrop }: PreviewImageProps) => {
   return (
     <div className="w-full h-full relative group animate-fadeIn">
       <div className="h-56 w-auto">
@@ -37,7 +37,7 @@ export const PreviewImage = ({ img, isSelected, onSelect, onClickRemove }: Previ
         }`}
       >
         <button
-          onClick={onSelect}
+          onClick={onCrop}
           className="absolute z-20 top-2 right-2 h-fit w-fit font-bold rounded-md mb-1 p-0.5 transition-colors text-neutral-400 hover:text-neutral-50 border border-neutral-600 hover:border-neutral-400"
         >
           <span className="px-10">Crop</span>
