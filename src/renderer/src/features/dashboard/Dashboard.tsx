@@ -15,6 +15,7 @@ export const Dashboard = () => {
   const [selectedSource, setSelectedSource] = useState<Source | undefined>();
   const [hasNewCapture, setHasNewCapture] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [selectedCache, setSelectedCache] = useState<Set<string>>(new Set());
 
   const {
     data: allSavedCaptures,
@@ -131,10 +132,24 @@ export const Dashboard = () => {
             data: {
               name: x.name,
               description: x.description,
-              sourceName: x.source,
+              sourceName: x.sourceName,
               sourceUrl: x.sourceUrl,
               tags: x.tags,
             },
+          }}
+          isSelected={selectedCache.has(id)}
+          onSelect={() => {
+            if (selectedCache.has(id)) {
+              setSelectedCache((prev) => {
+                prev.delete(id);
+                return new Set(prev);
+              });
+            } else {
+              setSelectedCache((prev) => {
+                prev.add(id);
+                return new Set(prev);
+              });
+            }
           }}
           onClickRemove={() => {
             deleteCaptures({ ids: [id] });
@@ -143,7 +158,6 @@ export const Dashboard = () => {
               return { ...prev };
             });
           }}
-          onChange={() => {}}
         />
       );
     });

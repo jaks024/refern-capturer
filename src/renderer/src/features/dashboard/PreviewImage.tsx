@@ -1,8 +1,6 @@
 import SimpleBar from 'simplebar-react';
-import { FormInput } from '../form/FormInput';
-import { TagEditor } from '../form/tag/TagEditor';
 
-export interface ImageData {
+export interface PreviewImage {
   id: string;
   base64: string;
   data: {
@@ -15,11 +13,12 @@ export interface ImageData {
 }
 
 export interface PreviewImageProps {
-  img: ImageData;
+  img: PreviewImage;
+  isSelected: boolean;
+  onSelect: () => void;
   onClickRemove: () => void;
-  onChange: (field: string, value: string | string[]) => void;
 }
-export const PreviewImage = ({ img, onChange, onClickRemove }: PreviewImageProps) => {
+export const PreviewImage = ({ img, isSelected, onSelect, onClickRemove }: PreviewImageProps) => {
   return (
     <div className="w-full h-full relative group animate-fadeIn">
       <div className="h-56 w-auto">
@@ -30,56 +29,36 @@ export const PreviewImage = ({ img, onChange, onClickRemove }: PreviewImageProps
         />
       </div>
 
-      <div className="absolute overflow-hidden flex flex-row p-2 justify-start text-left text-sm font-semibold bg-neutral-900 top-0 transition-opacity opacity-0 group-hover:opacity-70 w-full h-full">
-        <SimpleBar className="flex h-full w-full p-1">
-          <div className="flex flex-col z-10 h-fit w-full">
-            <div className="flex justify-between pb-2">
-              <button
-                onClick={onClickRemove}
-                className="relative h-fit w-fit rounded-md mb-1 p-0.5 transition-colors text-neutral-400 hover:text-neutral-50 border border-neutral-700 hover:border-neutral-400"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={2}
-                  stroke="currentColor"
-                  className="w-4 h-4 m-0.5"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-              <button
-                onClick={onClickRemove}
-                className="relative h-fit w-fit font-bold rounded-md mb-1 p-0.5 transition-colors text-neutral-400 hover:text-neutral-50 border border-neutral-700 hover:border-neutral-400"
-              >
-                <span className="px-10">Crop</span>
-              </button>
-            </div>
-
-            <FormInput
-              value={img.data.name}
-              placeholder="image name"
-              onChange={(value) => onChange('name', value)}
-            />
-            <FormInput
-              value={img.data.description}
-              placeholder="image description"
-              onChange={(value) => onChange('description', value)}
-            />
-            <FormInput
-              value={img.data.sourceName}
-              placeholder="source name"
-              onChange={(value) => onChange('sourceName', value)}
-            />
-            <FormInput
-              value={img.data.sourceUrl}
-              placeholder="source url"
-              onChange={(value) => onChange('sourceUrl', value)}
-            />
-            <TagEditor tags={img.data.tags} onTagChange={(value) => onChange('tags', value)} />
-          </div>
+      <div
+        className={`absolute overflow-hidden flex flex-col p-2 justify-end text-left text-sm font-semibold top-0 w-full h-full border transition-[opacity,border]  ${
+          isSelected
+            ? 'opacity-70 border-neutral-300'
+            : 'border-neutral-600 opacity-0 group-hover:opacity-70'
+        }`}
+      >
+        <button
+          onClick={onSelect}
+          className="absolute z-20 top-2 right-2 h-fit w-fit font-bold rounded-md mb-1 p-0.5 transition-colors text-neutral-400 hover:text-neutral-50 border border-neutral-600 hover:border-neutral-400"
+        >
+          <span className="px-10">Crop</span>
+        </button>
+        <SimpleBar className="flex h-fit max-h-[5rem] w-full z-20">
+          <div className=" h-1/2 w-full z-20">{img.data.sourceName}</div>
         </SimpleBar>
+        <button
+          type="button"
+          onClick={onSelect}
+          className="bg-neutral-900 absolute top-0 left-0 w-full h-full"
+        />
+        <button type="button" onClick={onSelect} className="absolute top-2 left-2 z-10">
+          <div className="w-6 h-6 border-neutral-300 border rounded-md flex flex-col justify-center">
+            <div
+              className={`w-[18px] h-[18px] m-auto rounded-[3px] transition-colors ${
+                isSelected ? 'bg-neutral-300' : 'bg-transparent'
+              }`}
+            />
+          </div>
+        </button>
       </div>
     </div>
   );

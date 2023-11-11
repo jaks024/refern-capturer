@@ -8,7 +8,7 @@ interface ImageData {
   id: string;
   name: string;
   description: string;
-  source: string;
+  sourceName: string;
   sourceUrl: string;
   tags: string[];
   base64: string;
@@ -42,13 +42,6 @@ const STORE_RECENT_CAPTURE_IDS = 'recentCaptureIds';
 let currentSource: string = '';
 let captureKeybind: string = store.get(STORE_KEYBIND) as string;
 
-/*
-  on manual capture -> save to file and return all image data and cache -> client add to its cache
-  on shortcut capture -> save to file and save id to file
-  on shortcut capture refresh -> get all shortcut capture ids from file and load all data from file -> client add to its cache
-  on client load -> get all images from file -> client add all to its cache
-*/
-
 const capture = async (sourceId: string) => {
   const sources = await desktopCapturer.getSources({
     types: ['window', 'screen'],
@@ -58,10 +51,16 @@ const capture = async (sourceId: string) => {
     },
   });
   const source = sources.find((x) => x.id === sourceId);
-  return source?.thumbnail.toPNG();
+  return {
+    buffer: source?.thumbnail.toPNG(),
+    name: source?.name,
+  };
 };
 
-const addToCache = (buffer: Buffer | undefined): ImageData | undefined => {
+const addToCache = (
+  buffer: Buffer | undefined,
+  sourceName: string | undefined,
+): ImageData | undefined => {
   if (buffer) {
     const id = uuidv4();
     const base64 = uInt8ArrayToBase64(buffer);
@@ -70,7 +69,7 @@ const addToCache = (buffer: Buffer | undefined): ImageData | undefined => {
       id: id,
       name: '',
       description: '',
-      source: '',
+      sourceName: sourceName ? sourceName : '',
       sourceUrl: '',
       tags: [],
       base64: '',
@@ -91,7 +90,7 @@ const addToCache = (buffer: Buffer | undefined): ImageData | undefined => {
 
 const onEventCapture = async () => {
   const content = await capture(currentSource);
-  return addToCache(content);
+  return addToCache(content.buffer, content.name);
 };
 
 const onEventCaptureShortcut = async () => {
