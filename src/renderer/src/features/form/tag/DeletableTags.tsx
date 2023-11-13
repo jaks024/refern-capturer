@@ -5,12 +5,12 @@ export const DeletableTags = ({
   tags: string[];
   onTagDelete: (t: string) => void;
 }) => {
-  if (tags.length === 0) {
+  if (tags?.length === 0) {
     return <div className="text-neutral-700 text-xs pl-1 mt-1">no existing tags</div>;
   }
   return (
     <>
-      {tags.map((t) => (
+      {tags?.map((t) => (
         <button
           key={t}
           type="button"

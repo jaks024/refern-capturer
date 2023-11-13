@@ -105,7 +105,7 @@ export const CaptureControl = ({
           </button>
         </div>
         <div className="grow overflow-hidden">
-          <SimpleBar className="h-full pr-2">
+          <SimpleBar className="h-full pr-2 max-h-[20rem]">
             <div className="flex flex-col gap-1">{SourceList()}</div>
           </SimpleBar>
         </div>

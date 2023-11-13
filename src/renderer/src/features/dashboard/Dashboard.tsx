@@ -15,6 +15,10 @@ import { useUpdateCacheRaw } from '../hooks/useUpdateCacheRaw';
 import 'cropperjs/dist/cropper.css';
 import { TagEditor } from '../form/tag/TagEditor';
 import { useUpdateCacheMeta } from '../hooks/useUpdateCacheMeta';
+import { UploadQueue } from '../add/components/UploadQueue';
+import { CreateImageDto, ImageBatch, ImageData } from '../add/types';
+import { createThumbnailBase64 } from '../add/helpers';
+import { v4 as uuidv4 } from 'uuid';
 
 export const Dashboard = () => {
   const [cache, setCache] = useState<Record<string, CacheData>>({});
@@ -25,6 +29,8 @@ export const Dashboard = () => {
   const [croppingId, setCroppingId] = useState('');
 
   const [onUploadTags, setOnUploadTags] = useState<string[]>([]);
+  const [uploadQueue, setUploadQueue] = useState<ImageBatch[]>([]);
+  const [isPrepUpload, setIsPrepUpload] = useState(false);
 
   const cropperRef = useRef<ReactCropperElement>(null);
 
@@ -136,6 +142,55 @@ export const Dashboard = () => {
     }
   };
 
+  const onUpload = async () => {
+    setIsPrepUpload(true);
+    const images: ImageData[] = [];
+    const ids = Array.from(selectedCache);
+    for (const id of ids) {
+      const data = cache[id];
+      const image: ImageData = {
+        id: id,
+        data: {
+          name: data.name,
+          description: data.description,
+          sourceName: data.sourceName,
+          sourceUrl: data.sourceUrl,
+          uploaderUserId: 'user_2Stbq5HQqi9p9YkB8CbJqWGqgUO',
+          parentCollectionId: '654c4e4ac90323fb86b50895',
+          tags: [...data.tags, ...onUploadTags],
+          metadata: {
+            fileName: `capture-${id}`,
+            type: 'image/png',
+            size: data.base64.length * (3 / 4),
+          },
+          transform: {
+            angle: 0,
+            flipX: false,
+            flipY: false,
+            scaleX: 1,
+            scaleY: 1,
+            brightness: 0,
+            saturation: 0,
+            contrast: 0,
+          },
+          arrayBufferBase64: data.base64,
+          thumbnailArrayBufferBase64: await createThumbnailBase64(data.base64),
+        },
+      };
+      images.push(image);
+    }
+    const batch: ImageBatch = {
+      id: uuidv4(),
+      images: images,
+      collectionId: '654c4e4ac90323fb86b50895',
+      collectionName: 'new stuff',
+    };
+    console.log(batch, images, selectedCache);
+    setUploadQueue((prev) => [...prev, batch]);
+    setSelectedCache(new Set());
+    setIsPrepUpload(false);
+  };
+
   const CacheImages = () => {
     if (!cache || Object.keys(cache).length == 0) {
       return (
@@ -196,16 +251,32 @@ export const Dashboard = () => {
     <div className="flex flex-row h-screen w-full overflow-hidden">
       <div className=" border-r border-neutral-800 flex flex-row h-screen">
         <div
-          className={` overflow-hidden transition-opacity ${
+          className={` overflow-hidden transition-opacity flex flex-col min-h-[20rem] ${
             selectedCache.size !== 0 ? 'w-0 opacity-0' : 'w-[16rem] opacity-100'
           }`}
         >
-          <CaptureControl
-            key={'capture-control'}
-            selectedSource={selectedSource}
-            onSelectSource={handleOnSelectSourceClicked}
-            onCaptureClicked={handleOnCaptureClicked}
-          />
+          <SimpleBar className="h-full">
+            <CaptureControl
+              key={'capture-control'}
+              selectedSource={selectedSource}
+              onSelectSource={handleOnSelectSourceClicked}
+              onCaptureClicked={handleOnCaptureClicked}
+            />
+            <UploadQueue
+              queue={uploadQueue}
+              popQueue={() => {
+                if (uploadQueue.length >= 1) {
+                  const upload = uploadQueue[uploadQueue.length - 1];
+                  setUploadQueue((prev) => {
+                    prev.pop();
+                    return [...prev];
+                  });
+                  return upload;
+                }
+                return undefined;
+              }}
+            />
+          </SimpleBar>
         </div>
         <div
           className={`overflow-hidden flex flex-col gap-1 transition-opacity border-neutral-800 ${
@@ -253,7 +324,7 @@ export const Dashboard = () => {
             <span className="font-bold text-xs text-neutral-500">Add tags to images on upload</span>
             <TagEditor tags={onUploadTags} onTagChange={setOnUploadTags} />
             <br />
-            <FormButton text="Upload" />
+            <FormButton text="Upload" onClick={onUpload} />
           </div>
         </div>
       </div>
@@ -297,6 +368,16 @@ export const Dashboard = () => {
           )}
         </div>
       </div>
+
+      {isPrepUpload ? (
+        <div className="absolute top-0 left-0 h-full w-full bg-neutral-900 opacity-80 flex justify-center">
+          <div className=" flex justify-center m-auto font-bold text-sm animate-pulse">
+            prepping for upload...
+          </div>
+        </div>
+      ) : (
+        <></>
+      )}
 
       {croppingId.length > 0 ? (
         <div className="absolute top-0 left-0 w-full h-full z-20">
