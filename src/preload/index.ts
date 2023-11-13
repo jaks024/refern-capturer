@@ -12,6 +12,15 @@ const api = {
   captureSource: () => ipcRenderer.invoke('capture-source'),
   hasNewCapture: () => ipcRenderer.invoke('has-new-capture'),
   updateCacheRaw: (id: string, raw: string) => ipcRenderer.invoke('update-cache-raw', { id, raw }),
+  updateCacheMeta: (data: {
+    id: string;
+    name: string;
+    description: string;
+    sourceName: string;
+    sourceUrl: string;
+    tags: string[];
+    base64: string;
+  }) => ipcRenderer.invoke('update-cache-meta', { data }),
 
   setCaptureKeybind: (keybind: string) => ipcRenderer.invoke('set-capture-keybind', { keybind }),
   getCaptureKeybind: () => ipcRenderer.invoke('get-capture-keybind'),

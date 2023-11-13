@@ -55,7 +55,7 @@ export const CaptureControl = ({
   };
 
   return (
-    <div className="w-[16rem] p-2 gap-4 h-full flex flex-col pr-0 border-r border-neutral-800">
+    <div className="w-[16rem] p-2 gap-4 h-full flex flex-col pr-0 ">
       <div className="mr-2 flex flex-col gap-1">
         <button
           type="button"

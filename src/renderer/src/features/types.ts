@@ -1,4 +1,4 @@
-export interface ImageData {
+export interface CacheData {
   id: string;
   name: string;
   description: string;

@@ -1,8 +1,8 @@
 import { QueryConfig, ExtractFnReturnType } from '@renderer/libs/reactQuery';
 import { useQuery } from '@tanstack/react-query';
-import { ImageData } from '../types';
+import { CacheData } from '../types';
 
-export const getAllSavedCaptures = (): Promise<ImageData[]> => {
+export const getAllSavedCaptures = (): Promise<CacheData[]> => {
   console.log('fetched refresh');
   return window.api.getAllSavedCaptures();
 };

@@ -1,8 +1,8 @@
 import { MutationConfig } from '@renderer/libs/reactQuery';
 import { useMutation } from '@tanstack/react-query';
-import { ImageData } from '../types';
+import { CacheData } from '../types';
 
-export const captureSource = ({}): Promise<ImageData> => {
+export const captureSource = ({}): Promise<CacheData> => {
   return window.api.captureSource();
 };
 

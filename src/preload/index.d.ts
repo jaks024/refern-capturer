@@ -9,7 +9,7 @@ declare global {
     id: string;
     name: string;
   }
-  interface ImageData {
+  interface CacheData {
     id: string;
     name: string;
     description: string;
@@ -23,12 +23,13 @@ declare global {
     getSources: () => Promise<Source[]>;
 
     hasNewCapture: () => Promise<boolean>;
-    getAllSavedCaptures: () => Promise<ImageData[]>;
-    getAllShortcutCaptures: () => Promise<ImageData[]>;
+    getAllSavedCaptures: () => Promise<CacheData[]>;
+    getAllShortcutCaptures: () => Promise<CacheData[]>;
     deleteCaptures: (imageIds: string[]) => Promise<void>;
-    captureSource: () => Promise<ImageData>;
+    captureSource: () => Promise<CacheData>;
     setCaptureSource: (newSource: string) => Promise<void>;
     updateCacheRaw: (id: string, raw: string) => Promise<void>;
+    updateCacheMeta: (data: CacheData) => Promise<void>;
 
     setCaptureKeybind: (keybind: string) => Promise<boolean>;
     getCaptureKeybind: () => Promise<string>;

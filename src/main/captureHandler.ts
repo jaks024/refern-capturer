@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import Store from 'electron-store';
 
-interface ImageData {
+interface CacheData {
   id: string;
   name: string;
   description: string;
@@ -14,25 +14,37 @@ interface ImageData {
   base64: string;
 }
 
-interface StoreType {
+interface MetaStoreType {
   capture: {
     keybind: string;
   };
-  imageMetas: Record<string, ImageData>;
-  imageRaws: Record<string, string>;
+  imageMetas: Record<string, CacheData>;
   recentCaptureIds: string[];
 }
 
-const store = new Store<StoreType>({
+interface RawStoreType {
+  imageRaws: Record<string, string>;
+}
+
+const metaStore = new Store<MetaStoreType>({
   defaults: {
     capture: {
       keybind: 'PrintScreen',
     },
     imageMetas: {},
-    imageRaws: {},
     recentCaptureIds: [],
   },
+  name: 'metas',
 });
+
+const rawsStore = new Store<RawStoreType>({
+  defaults: {
+    imageRaws: {},
+  },
+  name: 'raws',
+});
+
+// save raws as a separate file and support update image metas
 
 const STORE_KEYBIND = 'capture.keybind';
 const STORE_IMAGE_META = 'imageMetas';
@@ -40,7 +52,7 @@ const STORE_IMAGE_RAWS = 'imageRaws';
 const STORE_RECENT_CAPTURE_IDS = 'recentCaptureIds';
 
 let currentSource: string = '';
-let captureKeybind: string = store.get(STORE_KEYBIND) as string;
+let captureKeybind: string = metaStore.get(STORE_KEYBIND) as string;
 
 const capture = async (sourceId: string) => {
   const sources = await desktopCapturer.getSources({
@@ -60,12 +72,12 @@ const capture = async (sourceId: string) => {
 const addToCache = (
   buffer: Buffer | undefined,
   sourceName: string | undefined,
-): ImageData | undefined => {
+): CacheData | undefined => {
   if (buffer) {
     const id = uuidv4();
     const base64 = uInt8ArrayToBase64(buffer);
 
-    const data: ImageData = {
+    const data: CacheData = {
       id: id,
       name: '',
       description: '',
@@ -75,8 +87,8 @@ const addToCache = (
       base64: '',
     };
 
-    store.set(`${STORE_IMAGE_RAWS}.${id}`, uInt8ArrayToBase64(buffer));
-    store.set(`${STORE_IMAGE_META}.${id}`, data);
+    rawsStore.set(`${STORE_IMAGE_RAWS}.${id}`, uInt8ArrayToBase64(buffer));
+    metaStore.set(`${STORE_IMAGE_META}.${id}`, data);
 
     return {
       ...data,
@@ -95,8 +107,8 @@ const onEventCapture = async () => {
 
 const onEventCaptureShortcut = async () => {
   const data = await onEventCapture();
-  const ids = store.get(STORE_RECENT_CAPTURE_IDS);
-  store.set(STORE_RECENT_CAPTURE_IDS, [...ids, data?.id]);
+  const ids = metaStore.get(STORE_RECENT_CAPTURE_IDS);
+  metaStore.set(STORE_RECENT_CAPTURE_IDS, [...ids, data?.id]);
 };
 
 const AddHandles = () => {
@@ -124,9 +136,9 @@ const AddHandles = () => {
 
   ipcMain.handle('get-all-saved-captures', () => {
     console.log('load all capture');
-    const metas = store.get(STORE_IMAGE_META);
-    const raws = store.get(STORE_IMAGE_RAWS);
-    return Object.entries(metas).map((meta): ImageData => {
+    const metas = metaStore.get(STORE_IMAGE_META);
+    const raws = rawsStore.get(STORE_IMAGE_RAWS);
+    return Object.entries(metas).map((meta): CacheData => {
       return {
         ...meta[1],
         base64: raws[meta[0]],
@@ -136,13 +148,13 @@ const AddHandles = () => {
 
   ipcMain.handle('get-all-shortcut-captures', () => {
     console.log('load all capture');
-    const recentIds = store.get(STORE_RECENT_CAPTURE_IDS);
-    const metas = store.get(STORE_IMAGE_META);
-    const raws = store.get(STORE_IMAGE_RAWS);
+    const recentIds = metaStore.get(STORE_RECENT_CAPTURE_IDS);
+    const metas = metaStore.get(STORE_IMAGE_META);
+    const raws = rawsStore.get(STORE_IMAGE_RAWS);
 
-    store.set(STORE_RECENT_CAPTURE_IDS, []);
+    metaStore.set(STORE_RECENT_CAPTURE_IDS, []);
 
-    return recentIds.map((id): ImageData => {
+    return recentIds.map((id): CacheData => {
       const currentMeta = metas[id];
       const currentRaws = raws[id];
       delete metas[id];
@@ -155,7 +167,7 @@ const AddHandles = () => {
   });
 
   ipcMain.handle('has-new-capture', () => {
-    return store.get(STORE_RECENT_CAPTURE_IDS).length > 0;
+    return metaStore.get(STORE_RECENT_CAPTURE_IDS).length > 0;
   });
 
   ipcMain.handle('set-capture-keybind', (_: IpcMainInvokeEvent, args: { keybind: string }) => {
@@ -167,7 +179,7 @@ const AddHandles = () => {
     if (ret) {
       globalShortcut.unregister(captureKeybind);
       captureKeybind = args.keybind;
-      store.set(STORE_KEYBIND, args.keybind);
+      metaStore.set(STORE_KEYBIND, args.keybind);
       console.log('set capture keybind', ret);
     }
     return ret;
@@ -178,20 +190,26 @@ const AddHandles = () => {
   });
 
   ipcMain.handle('delete-captures', (_: IpcMainInvokeEvent, args: { imageIds: string[] }) => {
-    const metas = store.get(STORE_IMAGE_META);
-    const raws = store.get(STORE_IMAGE_RAWS);
+    const metas = metaStore.get(STORE_IMAGE_META);
+    const raws = rawsStore.get(STORE_IMAGE_RAWS);
     args.imageIds.forEach((id) => {
       delete metas[id];
       delete raws[id];
     });
-    store.set(STORE_IMAGE_META, metas);
-    store.set(STORE_IMAGE_RAWS, raws);
+    metaStore.set(STORE_IMAGE_META, metas);
+    rawsStore.set(STORE_IMAGE_RAWS, raws);
   });
 
   ipcMain.handle('update-cache-raw', (_: IpcMainInvokeEvent, args: { id: string; raw: string }) => {
-    const raws = store.get(STORE_IMAGE_RAWS);
+    const raws = rawsStore.get(STORE_IMAGE_RAWS);
     raws[args.id] = args.raw;
-    store.set(STORE_IMAGE_RAWS, raws);
+    rawsStore.set(STORE_IMAGE_RAWS, raws);
+  });
+
+  ipcMain.handle('update-cache-meta', (_: IpcMainInvokeEvent, args: { data: CacheData }) => {
+    const metas = metaStore.get(STORE_IMAGE_META);
+    metas[args.data.id] = args.data;
+    metaStore.set(STORE_IMAGE_META, metas);
   });
 };
 

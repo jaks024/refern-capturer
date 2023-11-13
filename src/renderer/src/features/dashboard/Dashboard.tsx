@@ -4,7 +4,7 @@ import { PreviewImage } from './PreviewImage';
 import SimpleBar from 'simplebar-react';
 import { useHasNewCapture } from '../hooks/useHasNewCapture';
 import { useGetAllSavedCaptures } from '../hooks/useGetAllSavedCaptures';
-import { ImageData } from '../types';
+import { CacheData } from '../types';
 import { useGetAllShortcutCaptures } from '../hooks/useGetAllShortcutCaptures';
 import { useCaptureSource } from '../hooks/useCaptureSource';
 import { useSetCaptureSource } from '../hooks/useSetCaptureSource';
@@ -13,14 +13,18 @@ import { Cropper, ReactCropperElement } from 'react-cropper';
 import { FormButton } from '../form/FormButton';
 import { useUpdateCacheRaw } from '../hooks/useUpdateCacheRaw';
 import 'cropperjs/dist/cropper.css';
+import { TagEditor } from '../form/tag/TagEditor';
+import { useUpdateCacheMeta } from '../hooks/useUpdateCacheMeta';
 
 export const Dashboard = () => {
-  const [cache, setCache] = useState<Record<string, ImageData>>({});
+  const [cache, setCache] = useState<Record<string, CacheData>>({});
   const [selectedSource, setSelectedSource] = useState<Source | undefined>();
   const [hasNewCapture, setHasNewCapture] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [selectedCache, setSelectedCache] = useState<Set<string>>(new Set());
   const [croppingId, setCroppingId] = useState('');
+
+  const [onUploadTags, setOnUploadTags] = useState<string[]>([]);
 
   const cropperRef = useRef<ReactCropperElement>(null);
 
@@ -54,6 +58,7 @@ export const Dashboard = () => {
   const { mutate: setCaptureSource } = useSetCaptureSource();
   const { mutate: deleteCaptures } = useDeleteCaptures();
   const { mutate: updateCacheRaw } = useUpdateCacheRaw();
+  const { mutate: updateCacheMeta } = useUpdateCacheMeta();
 
   useEffect(() => {
     if (!isInitialLoad) {
@@ -171,13 +176,17 @@ export const Dashboard = () => {
           onCrop={() => {
             setCroppingId(id);
           }}
-          // onClickRemove={() => {
-          //   deleteCaptures({ ids: [id] });
-          //   setCache((prev) => {
-          //     delete prev[id];
-          //     return { ...prev };
-          //   });
-          // }}
+          onSave={(dto) => {
+            updateCacheMeta(dto);
+            setCache((prev) => {
+              const base64 = prev[dto.id].base64;
+              prev[dto.id] = {
+                ...dto,
+                base64,
+              };
+              return { ...prev };
+            });
+          }}
         />
       );
     });
@@ -185,19 +194,76 @@ export const Dashboard = () => {
 
   return (
     <div className="flex flex-row h-screen w-full overflow-hidden">
-      <CaptureControl
-        key={'capture-control'}
-        selectedSource={selectedSource}
-        onSelectSource={handleOnSelectSourceClicked}
-        onCaptureClicked={handleOnCaptureClicked}
-      />
-      <div className="p-2 flex-1 overflow-hidden">
-        <div className="h-full overflow-hidden rounded-md border-neutral-800 border relative">
+      <div className=" border-r border-neutral-800 flex flex-row h-screen">
+        <div
+          className={` overflow-hidden transition-opacity ${
+            selectedCache.size !== 0 ? 'w-0 opacity-0' : 'w-[16rem] opacity-100'
+          }`}
+        >
+          <CaptureControl
+            key={'capture-control'}
+            selectedSource={selectedSource}
+            onSelectSource={handleOnSelectSourceClicked}
+            onCaptureClicked={handleOnCaptureClicked}
+          />
+        </div>
+        <div
+          className={`overflow-hidden flex flex-col gap-1 transition-opacity border-neutral-800 ${
+            selectedCache.size === 0 ? 'w-0 opacity-0' : 'w-[16rem] opacity-100'
+          }`}
+        >
+          <div
+            className={`flex flex-col gap-1 transition-all w-60 ml-2 ${
+              selectedCache.size === 0 ? 'opacity-0' : 'opacity-100'
+            }`}
+          >
+            <span className="text-3xl font-bold p-4">
+              {selectedCache.size}
+              <span className="text-neutral-500 text-sm pl-2">Images Selected</span>
+            </span>
+
+            <FormButton
+              text="Deselect All"
+              onClick={() => {
+                setSelectedCache(new Set());
+              }}
+            />
+            <FormButton
+              text="Select All"
+              onClick={() => {
+                setSelectedCache(new Set(Object.keys(cache)));
+              }}
+            />
+            <div className="my-4 border-t border-neutral-800" />
+            <FormButton
+              text="Delete Selected"
+              onClick={() => {
+                deleteCaptures({ ids: [...selectedCache.values()] });
+                setCache((prev) => {
+                  selectedCache.forEach((id) => {
+                    delete prev[id];
+                  });
+                  return { ...prev };
+                });
+                setSelectedCache(new Set());
+              }}
+            />
+            <div className="my-4 border-t border-neutral-800" />
+
+            <span className="font-bold text-xs text-neutral-500">Add tags to images on upload</span>
+            <TagEditor tags={onUploadTags} onTagChange={setOnUploadTags} />
+            <br />
+            <FormButton text="Upload" />
+          </div>
+        </div>
+      </div>
+      <div className="p-2 flex-1 overflow-hidden flex flex-row">
+        <div className="h-full grow overflow-hidden rounded-md border-neutral-800 border relative">
           <SimpleBar className="h-full">
             <div
               className="w-full grid "
               style={{
-                gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 13rem), 1fr))',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 17rem), 1fr))',
               }}
             >
               {CacheImages()}
