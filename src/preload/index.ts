@@ -24,6 +24,8 @@ const api = {
 
   setCaptureKeybind: (keybind: string) => ipcRenderer.invoke('set-capture-keybind', { keybind }),
   getCaptureKeybind: () => ipcRenderer.invoke('get-capture-keybind'),
+  setSnipKeybind: (keybind: string) => ipcRenderer.invoke('set-snip-keybind', { keybind }),
+  getSnipKeybind: () => ipcRenderer.invoke('get-snip-keybind'),
 };
 
 // Use `contextBridge` APIs to expose Electron APIs to

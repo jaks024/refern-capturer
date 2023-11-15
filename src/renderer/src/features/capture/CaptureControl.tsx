@@ -4,6 +4,10 @@ import SimpleBar from 'simplebar-react';
 import 'simplebar-react/dist/simplebar.min.css';
 import { CaptureKeybinder } from './CaptureKeybinder';
 import { useGetSources } from '../hooks/useGetSources';
+import { useGetCaptureKeybind } from '../hooks/useGetCaptureKeybind';
+import { useSetCaptureKeybind } from '../hooks/useSetCaptureKeybind';
+import { useGetSnipKeybind } from '../hooks/useGetSnipKeybind';
+import { useSetSnipKeybind } from '../hooks/useSetSnipKeybind';
 
 export interface CaptureControlProps {
   selectedSource: Source | undefined;
@@ -22,13 +26,44 @@ export const CaptureControl = ({
   onCaptureClicked,
 }: CaptureControlProps) => {
   const [sources, setSources] = useState<Source[]>([]);
-  const [shortcut, setShortcut] = useState('');
+  const [captureKeybind, setCaptureKeybind] = useState('PrintScreen');
+  const [snipKeybind, setSnipKeybind] = useState('Ctrl+Shift+S');
   console.log('RERENDER CAPTURE');
   const { data: sourceData, refetch: refetchSource } = useGetSources({
     config: {
       refetchOnWindowFocus: true,
     },
   });
+
+  const { data: captureKeybindData, refetch: refetchCaptureKeybind } = useGetCaptureKeybind({});
+  const { mutate: mutateCaptureKeybind } = useSetCaptureKeybind({
+    config: {
+      onSuccess() {
+        refetchCaptureKeybind();
+      },
+    },
+  });
+
+  const { data: snipKeybindData, refetch: refetchSnipKeybind } = useGetSnipKeybind({});
+  const { mutate: mutateSnipKeybind } = useSetSnipKeybind({
+    config: {
+      onSuccess() {
+        refetchSnipKeybind();
+      },
+    },
+  });
+
+  useEffect(() => {
+    if (captureKeybindData) {
+      setCaptureKeybind(captureKeybindData);
+    }
+  }, [captureKeybindData]);
+
+  useEffect(() => {
+    if (snipKeybindData) {
+      setSnipKeybind(snipKeybindData);
+    }
+  }, [snipKeybindData]);
 
   useEffect(() => {
     if (sourceData) {
@@ -40,6 +75,27 @@ export const CaptureControl = ({
       }
     }
   }, [sourceData]);
+
+  const isSameKeybind = (a: string, b: string) => {
+    if (a.length !== b.length) {
+      return false;
+    }
+    const a_dict: Record<string, number> = {};
+    const b_dict: Record<string, number> = {};
+    for (let i = 0; i < a.length; i++) {
+      a_dict[a[i]] = a_dict[a[i]] ? a_dict[a[i]] + 1 : 1;
+    }
+    for (let i = 0; i < b.length; i++) {
+      b_dict[b[i]] = b_dict[b[i]] ? b_dict[b[i]] + 1 : 1;
+    }
+    let equal = true;
+    Object.entries(a_dict).forEach((item) => {
+      if (!b_dict[item[0]] || b_dict[item[0]] !== item[1]) {
+        equal = false;
+      }
+    });
+    return equal;
+  };
 
   const SourceList = () => {
     return sources.map((source) => {
@@ -64,14 +120,30 @@ export const CaptureControl = ({
         >
           Capture Source
           <div className="text-xs text-neutral-500 font-semibold">
-            or press <span className="font-black">{shortcut}</span>
+            or press <span className="font-black">{captureKeybind}</span>
           </div>
         </button>
         <CaptureKeybinder
+          label="Capture source keybind"
+          sequence={captureKeybind}
           onBind={(keybind: string) => {
-            setShortcut(keybind);
+            if (!isSameKeybind(keybind, snipKeybind)) {
+              mutateCaptureKeybind({ keybind });
+            }
           }}
         />
+        <CaptureKeybinder
+          label="Snip screen keybind"
+          sequence={snipKeybind}
+          onBind={(keybind: string) => {
+            if (!isSameKeybind(keybind, captureKeybind)) {
+              mutateSnipKeybind({ keybind });
+            }
+          }}
+        />
+        <div className="text-xs text-neutral-500">
+          snips the screen that the cursor is currently in
+        </div>
       </div>
       <div className="flex flex-col gap-1 grow overflow-hidden h-[100% - 96px]">
         <div className="font-black text-xs text-neutral-400 flex justify-between pr-2">

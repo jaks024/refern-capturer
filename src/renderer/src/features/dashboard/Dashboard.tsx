@@ -295,7 +295,7 @@ export const Dashboard = () => {
               {selectedCache.size}
               <span className="text-neutral-500 text-sm pl-2">Images Selected</span>
             </span>
-
+            <span className="font-bold text-xs text-neutral-500">Selection controls</span>
             <FormButton
               text="Deselect All"
               onClick={() => {
@@ -308,7 +308,7 @@ export const Dashboard = () => {
                 setSelectedCache(new Set(Object.keys(cache)));
               }}
             />
-            <div className="my-4 border-t border-neutral-800" />
+            <span className="font-bold text-xs text-neutral-500 mt-2">Danger!</span>
             <FormButton
               text="Delete Selected"
               onClick={() => {
@@ -324,9 +324,12 @@ export const Dashboard = () => {
             />
             <div className="my-4 border-t border-neutral-800" />
 
-            <span className="font-bold text-xs text-neutral-500">Add tags to images on upload</span>
+            <span className="font-bold text-xs text-neutral-500">
+              Tags to add to images on upload
+            </span>
             <TagEditor tags={onUploadTags} onTagChange={setOnUploadTags} />
-            <br />
+
+            <span className="font-bold text-xs text-neutral-500 mt-2">Upload to collection</span>
             <CollectionSelector
               userId={'user_2Stbq5HQqi9p9YkB8CbJqWGqgUO'}
               selectedCollectionId={selectedCollectionId}
@@ -338,7 +341,15 @@ export const Dashboard = () => {
               openUp
             />
             <br />
-            <FormButton text="Upload" onClick={onUpload} />
+            <FormButton
+              text={
+                selectedCollectionName.length > 0
+                  ? `Upload ${selectedCache.size} image to ${selectedCollectionName}`
+                  : 'Upload'
+              }
+              disabled={selectedCollectionId.length === 0}
+              onClick={onUpload}
+            />
           </div>
         </div>
       </div>

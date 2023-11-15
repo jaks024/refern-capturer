@@ -1,34 +1,17 @@
 import { useClickOutside } from '@renderer/hooks/useClickOutside';
 import { useEffect, useRef, useState } from 'react';
-import { useSetCaptureKeybind } from '../hooks/useSetCaptureKeybind';
-import { useGetCaptureKeybind } from '../hooks/useGetCaptureKeybind';
 
 export interface CaptureKeybinderProp {
+  label: string;
+  sequence: string;
   onBind: (keybind: string) => void;
 }
 
-export const CaptureKeybinder = ({ onBind }: CaptureKeybinderProp) => {
+export const CaptureKeybinder = ({ label, sequence, onBind }: CaptureKeybinderProp) => {
   const [isListening, setIsListening] = useState(false);
   const [keys, setKeys] = useState<Set<string>>(new Set());
-  const [sequence, setSequence] = useState('');
   const ref = useRef(null);
   const isListeningRef = useRef(isListening);
-
-  const { data: fetchedSequence, refetch } = useGetCaptureKeybind({});
-  const { mutate } = useSetCaptureKeybind({
-    config: {
-      onSuccess() {
-        refetch();
-      },
-    },
-  });
-
-  useEffect(() => {
-    if (fetchedSequence) {
-      onBind(fetchedSequence);
-      setSequence(fetchedSequence);
-    }
-  }, [fetchedSequence]);
 
   useClickOutside(ref, () => {
     setIsListening(false);
@@ -49,7 +32,7 @@ export const CaptureKeybinder = ({ onBind }: CaptureKeybinderProp) => {
     if (isListeningRef.current) {
       const seq = getSequence();
       if (seq.length > 0) {
-        mutate({ keybind: seq });
+        onBind(seq);
       }
     }
     setKeys(new Set());
@@ -59,7 +42,7 @@ export const CaptureKeybinder = ({ onBind }: CaptureKeybinderProp) => {
 
   const getKeybindText = () => {
     if (!isListeningRef.current) {
-      return `Shortcut: ${sequence}`;
+      return sequence;
     }
     console.log(keys);
     return `New Keybind: ${getSequence().toLocaleUpperCase()}`;
@@ -81,7 +64,8 @@ export const CaptureKeybinder = ({ onBind }: CaptureKeybinderProp) => {
   }, []);
 
   return (
-    <div>
+    <div className="flex flex-col">
+      <span className="font-bold text-xs text-neutral-500">{label}</span>
       <button
         ref={ref}
         type="button"

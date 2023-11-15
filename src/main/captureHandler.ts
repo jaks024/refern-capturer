@@ -3,6 +3,7 @@ import { uInt8ArrayToBase64 } from './helper';
 import { v4 as uuidv4 } from 'uuid';
 
 import Store from 'electron-store';
+import Screenshots from 'electron-screenshots';
 
 interface CacheData {
   id: string;
@@ -18,6 +19,9 @@ interface MetaStoreType {
   capture: {
     keybind: string;
   };
+  snip: {
+    keybind: string;
+  };
   imageMetas: Record<string, CacheData>;
   recentCaptureIds: string[];
 }
@@ -30,6 +34,9 @@ const metaStore = new Store<MetaStoreType>({
   defaults: {
     capture: {
       keybind: 'PrintScreen',
+    },
+    snip: {
+      keybind: 'Control+Shift+S',
     },
     imageMetas: {},
     recentCaptureIds: [],
@@ -46,13 +53,15 @@ const rawsStore = new Store<RawStoreType>({
 
 // save raws as a separate file and support update image metas
 
-const STORE_KEYBIND = 'capture.keybind';
+const STORE_CAPTURE_KEYBIND = 'capture.keybind';
+const STORE_SNIP_KEYBIND = 'snip.keybind';
 const STORE_IMAGE_META = 'imageMetas';
 const STORE_IMAGE_RAWS = 'imageRaws';
 const STORE_RECENT_CAPTURE_IDS = 'recentCaptureIds';
 
 let currentSource: string = '';
-let captureKeybind: string = metaStore.get(STORE_KEYBIND) as string;
+let captureKeybind: string = metaStore.get(STORE_CAPTURE_KEYBIND) as string;
+let snipKeybind: string = metaStore.get(STORE_SNIP_KEYBIND) as string;
 
 const capture = async (sourceId: string) => {
   const sources = await desktopCapturer.getSources({
@@ -174,19 +183,38 @@ const AddHandles = () => {
     if (args.keybind == captureKeybind) {
       return true;
     }
-    console.log('called', args.keybind);
+    console.log('called capture', args.keybind);
     const ret = globalShortcut.register(args.keybind, onEventCaptureShortcut);
     if (ret) {
       globalShortcut.unregister(captureKeybind);
       captureKeybind = args.keybind;
-      metaStore.set(STORE_KEYBIND, args.keybind);
+      metaStore.set(STORE_CAPTURE_KEYBIND, args.keybind);
       console.log('set capture keybind', ret);
+    }
+    return ret;
+  });
+
+  ipcMain.handle('set-snip-keybind', (_: IpcMainInvokeEvent, args: { keybind: string }) => {
+    if (args.keybind == snipKeybind) {
+      return true;
+    }
+    console.log('called snip', args.keybind);
+    const ret = globalShortcut.register(args.keybind, onEventCaptureShortcut);
+    if (ret) {
+      globalShortcut.unregister(snipKeybind);
+      snipKeybind = args.keybind;
+      metaStore.set(STORE_SNIP_KEYBIND, args.keybind);
+      console.log('set snip keybind', ret);
     }
     return ret;
   });
 
   ipcMain.handle('get-capture-keybind', () => {
     return captureKeybind;
+  });
+
+  ipcMain.handle('get-snip-keybind', () => {
+    return snipKeybind;
   });
 
   ipcMain.handle('delete-captures', (_: IpcMainInvokeEvent, args: { imageIds: string[] }) => {
@@ -215,9 +243,15 @@ const AddHandles = () => {
 
 const RegisterKeybind = () => {
   // Register a 'CommandOrControl+X' shortcut listener.
-  const ret = globalShortcut.register(captureKeybind, onEventCaptureShortcut);
+  const ret1 = globalShortcut.register(captureKeybind, onEventCaptureShortcut);
 
-  if (!ret) {
+  const screenshots = new Screenshots();
+  const ret2 = globalShortcut.register(snipKeybind, () => {
+    screenshots.startCapture();
+    screenshots.$view.webContents.openDevTools();
+  });
+
+  if (!ret1 && !ret2) {
     console.log('registration failed');
   }
 

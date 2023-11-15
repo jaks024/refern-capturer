@@ -33,6 +33,8 @@ declare global {
 
     setCaptureKeybind: (keybind: string) => Promise<boolean>;
     getCaptureKeybind: () => Promise<string>;
+    setSnipKeybind: (keybind: string) => Promise<boolean>;
+    getSnipKeybind: () => Promise<string>;
   }
   interface Window {
     electron: ElectronAPI;
