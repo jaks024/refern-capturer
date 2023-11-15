@@ -19,6 +19,7 @@ import { UploadQueue } from '../add/components/UploadQueue';
 import { CreateImageDto, ImageBatch, ImageData } from '../add/types';
 import { createThumbnailBase64 } from '../add/helpers';
 import { v4 as uuidv4 } from 'uuid';
+import { CollectionSelector } from '../add/components/CollectionSelector';
 
 export const Dashboard = () => {
   const [cache, setCache] = useState<Record<string, CacheData>>({});
@@ -31,6 +32,8 @@ export const Dashboard = () => {
   const [onUploadTags, setOnUploadTags] = useState<string[]>([]);
   const [uploadQueue, setUploadQueue] = useState<ImageBatch[]>([]);
   const [isPrepUpload, setIsPrepUpload] = useState(false);
+  const [selectedCollectionId, setSelectedCollectionId] = useState('');
+  const [selectedCollectionName, setSelectedCollectionName] = useState('');
 
   const cropperRef = useRef<ReactCropperElement>(null);
 
@@ -156,7 +159,7 @@ export const Dashboard = () => {
           sourceName: data.sourceName,
           sourceUrl: data.sourceUrl,
           uploaderUserId: 'user_2Stbq5HQqi9p9YkB8CbJqWGqgUO',
-          parentCollectionId: '654c4e4ac90323fb86b50895',
+          parentCollectionId: selectedCollectionId,
           tags: [...data.tags, ...onUploadTags],
           metadata: {
             fileName: `capture-${id}`,
@@ -279,8 +282,8 @@ export const Dashboard = () => {
           </SimpleBar>
         </div>
         <div
-          className={`overflow-hidden flex flex-col gap-1 transition-opacity border-neutral-800 ${
-            selectedCache.size === 0 ? 'w-0 opacity-0' : 'w-[16rem] opacity-100'
+          className={`flex flex-col gap-1 transition-opacity border-neutral-800 ${
+            selectedCache.size === 0 ? 'w-0 opacity-0 overflow-hidden' : 'w-[16rem] opacity-100'
           }`}
         >
           <div
@@ -323,6 +326,17 @@ export const Dashboard = () => {
 
             <span className="font-bold text-xs text-neutral-500">Add tags to images on upload</span>
             <TagEditor tags={onUploadTags} onTagChange={setOnUploadTags} />
+            <br />
+            <CollectionSelector
+              userId={'user_2Stbq5HQqi9p9YkB8CbJqWGqgUO'}
+              selectedCollectionId={selectedCollectionId}
+              selectedCollectionName={selectedCollectionName}
+              onSelect={(collectionId: string, collectionName: string) => {
+                setSelectedCollectionId(collectionId);
+                setSelectedCollectionName(collectionName);
+              }}
+              openUp
+            />
             <br />
             <FormButton text="Upload" onClick={onUpload} />
           </div>
