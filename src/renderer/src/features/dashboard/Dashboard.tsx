@@ -16,7 +16,7 @@ import 'cropperjs/dist/cropper.css';
 import { TagEditor } from '../form/tag/TagEditor';
 import { useUpdateCacheMeta } from '../hooks/useUpdateCacheMeta';
 import { UploadQueue } from '../add/components/UploadQueue';
-import { CreateImageDto, ImageBatch, ImageData } from '../add/types';
+import { ImageBatch, ImageData } from '../add/types';
 import { createThumbnailBase64 } from '../add/helpers';
 import { v4 as uuidv4 } from 'uuid';
 import { CollectionSelector } from '../add/components/CollectionSelector';
