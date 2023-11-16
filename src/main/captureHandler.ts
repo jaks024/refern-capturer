@@ -62,6 +62,7 @@ const STORE_RECENT_CAPTURE_IDS = 'recentCaptureIds';
 let currentSource: string = '';
 let captureKeybind: string = metaStore.get(STORE_CAPTURE_KEYBIND) as string;
 let snipKeybind: string = metaStore.get(STORE_SNIP_KEYBIND) as string;
+let screenshots;
 
 const capture = async (sourceId: string) => {
   const sources = await desktopCapturer.getSources({
@@ -109,6 +110,14 @@ const addToCache = (
   }
 };
 
+const addToRecentlyAdded = (newId: string | undefined) => {
+  if (undefined) {
+    return;
+  }
+  const ids = metaStore.get(STORE_RECENT_CAPTURE_IDS);
+  metaStore.set(STORE_RECENT_CAPTURE_IDS, [...ids, newId]);
+};
+
 const onEventCapture = async () => {
   const content = await capture(currentSource);
   return addToCache(content.buffer, content.name);
@@ -116,8 +125,14 @@ const onEventCapture = async () => {
 
 const onEventCaptureShortcut = async () => {
   const data = await onEventCapture();
-  const ids = metaStore.get(STORE_RECENT_CAPTURE_IDS);
-  metaStore.set(STORE_RECENT_CAPTURE_IDS, [...ids, data?.id]);
+  addToRecentlyAdded(data?.id);
+};
+
+const onEventSnipShortcut = () => {
+  if (screenshots) {
+    screenshots.startCapture();
+    // screenshots.$view.webContents.openDevTools();
+  }
 };
 
 const AddHandles = () => {
@@ -199,7 +214,7 @@ const AddHandles = () => {
       return true;
     }
     console.log('called snip', args.keybind);
-    const ret = globalShortcut.register(args.keybind, onEventCaptureShortcut);
+    const ret = globalShortcut.register(args.keybind, onEventSnipShortcut);
     if (ret) {
       globalShortcut.unregister(snipKeybind);
       snipKeybind = args.keybind;
@@ -245,13 +260,38 @@ const RegisterKeybind = () => {
   // Register a 'CommandOrControl+X' shortcut listener.
   const ret1 = globalShortcut.register(captureKeybind, onEventCaptureShortcut);
 
-  const screenshots = new Screenshots();
-  const ret2 = globalShortcut.register(snipKeybind, () => {
-    screenshots.startCapture();
-    screenshots.$view.webContents.openDevTools();
+  screenshots = new Screenshots({
+    lang: {
+      magnifier_position_label: 'Position',
+      operation_ok_title: 'Snip',
+      operation_cancel_title: 'Cancel',
+      operation_save_title: 'Save to Disk',
+      operation_redo_title: 'Redo',
+      operation_undo_title: 'Undo',
+      operation_mosaic_title: 'Paint Mosaic',
+      operation_text_title: 'Text',
+      operation_brush_title: 'Brush',
+      operation_arrow_title: 'Draw Arrow',
+      operation_ellipse_title: 'Draw Ellipse',
+      operation_rectangle_title: 'Draw Rectangle',
+    },
+    singleWindow: true,
+  });
+  screenshots.on('ok', (_, buffer, __) => {
+    const data = addToCache(buffer, 'snip');
+    addToRecentlyAdded(data?.id);
+  });
+  screenshots.on('afterSave', (_, buffer, __) => {
+    const data = addToCache(buffer, 'snip');
+    addToRecentlyAdded(data?.id);
   });
 
-  if (!ret1 && !ret2) {
+  const ret2 = globalShortcut.register(snipKeybind, onEventSnipShortcut);
+  const ret3 = globalShortcut.register('Escape', () => {
+    screenshots.endCapture();
+  });
+
+  if (!ret1 && !ret2 && !ret3) {
     console.log('registration failed');
   }
 

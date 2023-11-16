@@ -53,10 +53,12 @@ export const Dashboard = () => {
   });
   const { mutate: captureSource } = useCaptureSource({
     onSuccess(data, _, __) {
-      setCache((prev) => {
-        return { ...prev, [data.id]: data };
-      });
-      console.log('CAPTURE SUCCESS');
+      if (data) {
+        setCache((prev) => {
+          return { ...prev, [data.id]: data };
+        });
+        console.log('CAPTURE SUCCESS');
+      }
     },
   });
   const { data: newCapture } = useHasNewCapture({
@@ -191,6 +193,12 @@ export const Dashboard = () => {
     console.log(batch, images, selectedCache);
     setUploadQueue((prev) => [...prev, batch]);
     setSelectedCache(new Set());
+    setCache((prev) => {
+      ids.forEach((id) => {
+        delete prev[id];
+      });
+      return { ...prev };
+    });
     setIsPrepUpload(false);
   };
 
