@@ -16,6 +16,7 @@ interface CacheData {
 }
 
 interface MetaStoreType {
+  userId: string;
   capture: {
     keybind: string;
   };
@@ -32,6 +33,7 @@ interface RawStoreType {
 
 const metaStore = new Store<MetaStoreType>({
   defaults: {
+    userId: '',
     capture: {
       keybind: 'PrintScreen',
     },
@@ -52,7 +54,7 @@ const rawsStore = new Store<RawStoreType>({
 });
 
 // save raws as a separate file and support update image metas
-
+const STORE_USER_ID = 'userId';
 const STORE_CAPTURE_KEYBIND = 'capture.keybind';
 const STORE_SNIP_KEYBIND = 'snip.keybind';
 const STORE_IMAGE_META = 'imageMetas';
@@ -253,6 +255,15 @@ const AddHandles = () => {
     const metas = metaStore.get(STORE_IMAGE_META);
     metas[args.data.id] = args.data;
     metaStore.set(STORE_IMAGE_META, metas);
+  });
+
+  ipcMain.handle('get-user-id', (_: IpcMainInvokeEvent) => {
+    const userId = metaStore.get(STORE_USER_ID);
+    return userId;
+  });
+
+  ipcMain.handle('set-user-id', (_: IpcMainInvokeEvent, args: { id: string }) => {
+    metaStore.set(STORE_USER_ID, args.id);
   });
 };
 

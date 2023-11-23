@@ -20,6 +20,8 @@ import { ImageBatch, ImageData } from '../add/types';
 import { createThumbnailBase64 } from '../add/helpers';
 import { v4 as uuidv4 } from 'uuid';
 import { CollectionSelector } from '../add/components/CollectionSelector';
+import { useUser } from '../auth/hooks/useUser';
+import { ProfileButton } from '../auth/ProfileButton';
 
 export const Dashboard = () => {
   const [cache, setCache] = useState<Record<string, CacheData>>({});
@@ -34,6 +36,8 @@ export const Dashboard = () => {
   const [isPrepUpload, setIsPrepUpload] = useState(false);
   const [selectedCollectionId, setSelectedCollectionId] = useState('');
   const [selectedCollectionName, setSelectedCollectionName] = useState('');
+
+  const { user } = useUser();
 
   const cropperRef = useRef<ReactCropperElement>(null);
 
@@ -152,6 +156,9 @@ export const Dashboard = () => {
     const images: ImageData[] = [];
     const ids = Array.from(selectedCache);
     for (const id of ids) {
+      if (!user?._id) {
+        continue;
+      }
       const data = cache[id];
       const image: ImageData = {
         id: id,
@@ -160,7 +167,7 @@ export const Dashboard = () => {
           description: data.description,
           sourceName: data.sourceName,
           sourceUrl: data.sourceUrl,
-          uploaderUserId: 'user_2Stbq5HQqi9p9YkB8CbJqWGqgUO',
+          uploaderUserId: user._id,
           parentCollectionId: selectedCollectionId,
           tags: [...data.tags, ...onUploadTags],
           metadata: {
@@ -187,8 +194,8 @@ export const Dashboard = () => {
     const batch: ImageBatch = {
       id: uuidv4(),
       images: images,
-      collectionId: '654c4e4ac90323fb86b50895',
-      collectionName: 'new stuff',
+      collectionId: selectedCollectionId,
+      collectionName: selectedCollectionName,
     };
     console.log(batch, images, selectedCache);
     setUploadQueue((prev) => [...prev, batch]);
@@ -199,6 +206,7 @@ export const Dashboard = () => {
       });
       return { ...prev };
     });
+    deleteCaptures({ ids });
     setIsPrepUpload(false);
   };
 
@@ -259,7 +267,7 @@ export const Dashboard = () => {
   };
 
   return (
-    <div className="flex flex-row h-screen w-full overflow-hidden">
+    <div className="flex flex-row h-screen w-full overflow-hidden animate-fadeIn">
       <div className=" border-r border-neutral-800 flex flex-row h-screen">
         <div
           className={` overflow-hidden transition-opacity flex flex-col min-h-[20rem] ${
@@ -287,6 +295,7 @@ export const Dashboard = () => {
                 return undefined;
               }}
             />
+            <ProfileButton />
           </SimpleBar>
         </div>
         <div
@@ -339,7 +348,7 @@ export const Dashboard = () => {
 
             <span className="font-bold text-xs text-neutral-500 mt-2">Upload to collection</span>
             <CollectionSelector
-              userId={'user_2Stbq5HQqi9p9YkB8CbJqWGqgUO'}
+              userId={user?._id ?? ''}
               selectedCollectionId={selectedCollectionId}
               selectedCollectionName={selectedCollectionName}
               onSelect={(collectionId: string, collectionName: string) => {

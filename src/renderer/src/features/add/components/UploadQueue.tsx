@@ -3,6 +3,7 @@ import { ImageBatch, UploadResponse } from '../types';
 import { workerBuilder } from '../workers/workerBuilder';
 import { UploadQueueProgress } from './UploadQueueProgress';
 import SimpleBar from 'simplebar-react';
+import { API_URL } from '@renderer/config';
 
 const uploadWorker = workerBuilder();
 
@@ -32,7 +33,7 @@ export const UploadQueue = ({
       console.log('NO BATCH');
       return;
     }
-    uploadWorker.postMessage(['https://dev.api.refern.app', batch]);
+    uploadWorker.postMessage([API_URL, batch]);
     setProgress((prev) => {
       return {
         ...prev,
@@ -86,7 +87,9 @@ export const UploadQueue = ({
   return (
     <div className="flex flex-col p-2 gap-[1px]">
       <div className="text-xs font-black text-neutral-400">Uploads</div>
-      <SimpleBar className="h-full max-h-40">{renderUploadProgress()}</SimpleBar>
+      <SimpleBar className="h-full max-h-40">
+        <div className="flex flex-col gap-1">{renderUploadProgress()}</div>
+      </SimpleBar>
     </div>
   );
 };

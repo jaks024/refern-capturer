@@ -20,6 +20,9 @@ declare global {
   }
 
   interface API {
+    setUserId: (id: string) => Promise<void>;
+    getUserId: () => Promise<string>;
+
     getSources: () => Promise<Source[]>;
 
     hasNewCapture: () => Promise<boolean>;

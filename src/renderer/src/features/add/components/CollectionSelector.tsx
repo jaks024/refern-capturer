@@ -29,6 +29,7 @@ export const CollectionSelector = ({
     config: {
       staleTime: 0,
       refetchOnMount: true,
+      enabled: userId !== undefined && userId.length > 0,
     },
   });
 
@@ -75,6 +76,13 @@ export const CollectionSelector = ({
       return (
         <div className="text-center p-5 text-neutral-400 text-xs font-bold animate-pulse">
           loading...
+        </div>
+      );
+    }
+    if (data?.length === 0) {
+      return (
+        <div className="text-xs font-black text-neutral-400 p-10 w-full text-center">
+          No collections to select. Please create some in refern web first!
         </div>
       );
     }
