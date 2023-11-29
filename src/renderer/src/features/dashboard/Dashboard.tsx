@@ -155,42 +155,49 @@ export const Dashboard = () => {
     setIsPrepUpload(true);
     const images: ImageData[] = [];
     const ids = Array.from(selectedCache);
-    for (const id of ids) {
-      if (!user?._id) {
-        continue;
-      }
-      const data = cache[id];
-      const image: ImageData = {
-        id: id,
-        data: {
-          name: data.name,
-          description: data.description,
-          sourceName: data.sourceName,
-          sourceUrl: data.sourceUrl,
-          uploaderUserId: user._id,
-          parentCollectionId: selectedCollectionId,
-          tags: [...data.tags, ...onUploadTags],
-          metadata: {
-            fileName: `capture-${id}`,
-            type: 'image/png',
-            size: data.base64.length * (3 / 4),
-          },
-          transform: {
-            angle: 0,
-            flipX: false,
-            flipY: false,
-            scaleX: 1,
-            scaleY: 1,
-            brightness: 0,
-            saturation: 0,
-            contrast: 0,
-          },
-          arrayBufferBase64: data.base64,
-          thumbnailArrayBufferBase64: await createThumbnailBase64(data.base64),
-        },
-      };
-      images.push(image);
-    }
+    await Promise.all(
+      ids.map(
+        (id) =>
+          new Promise(async (res, rej) => {
+            if (!user?._id) {
+              return res(id);
+            }
+            const data = cache[id];
+            const image: ImageData = {
+              id: id,
+              data: {
+                name: data.name,
+                description: data.description,
+                sourceName: data.sourceName,
+                sourceUrl: data.sourceUrl,
+                uploaderUserId: user._id,
+                parentCollectionId: selectedCollectionId,
+                tags: [...data.tags, ...onUploadTags],
+                metadata: {
+                  fileName: `capture-${id}`,
+                  type: 'image/png',
+                  size: data.base64.length * (3 / 4),
+                },
+                transform: {
+                  angle: 0,
+                  flipX: false,
+                  flipY: false,
+                  scaleX: 1,
+                  scaleY: 1,
+                  brightness: 0,
+                  saturation: 0,
+                  contrast: 0,
+                },
+                arrayBufferBase64: data.base64,
+                thumbnailArrayBufferBase64: await createThumbnailBase64(data.base64),
+              },
+            };
+            images.push(image);
+            res(id);
+          }),
+      ),
+    );
+
     const batch: ImageBatch = {
       id: uuidv4(),
       images: images,
@@ -422,6 +429,8 @@ export const Dashboard = () => {
         <div className="absolute top-0 left-0 h-full w-full bg-neutral-900 opacity-80 flex justify-center">
           <div className=" flex justify-center m-auto font-bold text-sm animate-pulse">
             prepping for upload...
+            <br />
+            processing images. high CPU usage is expected
           </div>
         </div>
       ) : (
