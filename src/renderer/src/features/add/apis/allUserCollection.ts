@@ -10,7 +10,7 @@ export interface CollectionSimple {
 }
 
 export const allUserCollection = ({ userId }: { userId: string }): Promise<CollectionSimple[]> => {
-  return axios.get(`/collection/all/${userId}`);
+  return axios.get(`/capturer/collection/all/${userId}`);
 };
 
 type QueryFnType = typeof allUserCollection;

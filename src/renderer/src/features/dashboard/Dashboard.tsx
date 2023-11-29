@@ -268,6 +268,13 @@ export const Dashboard = () => {
 
   return (
     <div className="flex flex-row h-screen w-full overflow-hidden animate-fadeIn">
+      {!isFetchedAllSavedCaptures && (
+        <div className="absolute top-0 left-0 flex justify-center w-full h-screen z-20 bg-neutral-900 ">
+          <div className="flex flex-col justify-center animate-pulse font-black text-xs">
+            loading images...
+          </div>
+        </div>
+      )}
       <div className=" border-r border-neutral-800 flex flex-row h-screen">
         <div
           className={` overflow-hidden transition-opacity flex flex-col min-h-[20rem] ${

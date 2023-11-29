@@ -3,8 +3,8 @@ import { electronAPI } from '@electron-toolkit/preload';
 
 // Custom APIs for renderer
 const api = {
-  setUserId: (id: string) => ipcRenderer.invoke('set-user-id', { id }),
-  getUserId: () => ipcRenderer.invoke('get-user-id'),
+  setUserToken: (token: string) => ipcRenderer.invoke('set-user-token', { token }),
+  getUserToken: () => ipcRenderer.invoke('get-user-token'),
 
   getSources: () => ipcRenderer.invoke('get-sources'),
   setCaptureSource: (newSource: string) => ipcRenderer.invoke('set-capture-source', { newSource }),

@@ -20,8 +20,8 @@ declare global {
   }
 
   interface API {
-    setUserId: (id: string) => Promise<void>;
-    getUserId: () => Promise<string>;
+    setUserToken: (token: string) => Promise<void>;
+    getUserToken: () => Promise<string>;
 
     getSources: () => Promise<Source[]>;
 

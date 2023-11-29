@@ -4,7 +4,7 @@ import { useMutation } from '@tanstack/react-query';
 import { User } from '../types';
 
 export const getUserData = ({ userId }: { userId: string }): Promise<User> => {
-  return axios.get(`/user/${userId}`);
+  return axios.get(`/capturer/user/${userId}`);
 };
 
 type UseGetUserOptions = {

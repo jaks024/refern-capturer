@@ -16,7 +16,7 @@ interface CacheData {
 }
 
 interface MetaStoreType {
-  userId: string;
+  token: string;
   capture: {
     keybind: string;
   };
@@ -33,7 +33,7 @@ interface RawStoreType {
 
 const metaStore = new Store<MetaStoreType>({
   defaults: {
-    userId: '',
+    token: '',
     capture: {
       keybind: 'PrintScreen',
     },
@@ -54,7 +54,7 @@ const rawsStore = new Store<RawStoreType>({
 });
 
 // save raws as a separate file and support update image metas
-const STORE_USER_ID = 'userId';
+const STORE_USER_TOKEN = 'token';
 const STORE_CAPTURE_KEYBIND = 'capture.keybind';
 const STORE_SNIP_KEYBIND = 'snip.keybind';
 const STORE_IMAGE_META = 'imageMetas';
@@ -164,6 +164,8 @@ const AddHandles = () => {
     console.log('load all capture');
     const metas = metaStore.get(STORE_IMAGE_META);
     const raws = rawsStore.get(STORE_IMAGE_RAWS);
+    console.log(metas);
+    console.log(raws);
     return Object.entries(metas).map((meta): CacheData => {
       return {
         ...meta[1],
@@ -257,13 +259,13 @@ const AddHandles = () => {
     metaStore.set(STORE_IMAGE_META, metas);
   });
 
-  ipcMain.handle('get-user-id', (_: IpcMainInvokeEvent) => {
-    const userId = metaStore.get(STORE_USER_ID);
+  ipcMain.handle('get-user-token', (_: IpcMainInvokeEvent) => {
+    const userId = metaStore.get(STORE_USER_TOKEN);
     return userId;
   });
 
-  ipcMain.handle('set-user-id', (_: IpcMainInvokeEvent, args: { id: string }) => {
-    metaStore.set(STORE_USER_ID, args.id);
+  ipcMain.handle('set-user-token', (_: IpcMainInvokeEvent, args: { token: string }) => {
+    metaStore.set(STORE_USER_TOKEN, args.token);
   });
 };
 

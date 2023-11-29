@@ -5,6 +5,14 @@ export const axios = Axios.create({
   baseURL: API_URL,
 });
 
+export const setAxiosAuthHeader = (authToken: string) => {
+  axios.defaults.headers.common['Authorization'] = authToken;
+};
+
+export const getAxiosAuthHeader = () => {
+  return axios.defaults.headers.common['Authorization']?.toString();
+};
+
 axios.interceptors.response.use(
   (response) => {
     return response.data;

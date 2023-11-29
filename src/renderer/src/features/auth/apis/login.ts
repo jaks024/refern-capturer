@@ -3,23 +3,28 @@ import { MutationConfig } from '@renderer/libs/reactQuery';
 import { useMutation } from '@tanstack/react-query';
 import { User } from '../types';
 
-export const getCapturerUser = ({
+export const login = ({
   handle,
   accessCode,
 }: {
   handle: string;
   accessCode: string;
 }): Promise<User> => {
-  return axios.get(`/user/capturer/${handle}/${accessCode}`);
+  return axios.get(`/capturer/login`, {
+    params: {
+      at: handle,
+      code: accessCode,
+    },
+  });
 };
 
-type UseGetCapturerUserOptions = {
-  config?: MutationConfig<typeof getCapturerUser>;
+type UseLoginOptions = {
+  config?: MutationConfig<typeof login>;
 };
 
-export const useGetCapturerUser = ({ config }: UseGetCapturerUserOptions) => {
+export const useLogin = ({ config }: UseLoginOptions) => {
   return useMutation({
     ...config,
-    mutationFn: getCapturerUser,
+    mutationFn: login,
   });
 };

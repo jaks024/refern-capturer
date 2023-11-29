@@ -4,6 +4,7 @@ import { workerBuilder } from '../workers/workerBuilder';
 import { UploadQueueProgress } from './UploadQueueProgress';
 import SimpleBar from 'simplebar-react';
 import { API_URL } from '@renderer/config';
+import { getAxiosAuthHeader } from '@renderer/libs/axios';
 
 const uploadWorker = workerBuilder();
 
@@ -33,7 +34,7 @@ export const UploadQueue = ({
       console.log('NO BATCH');
       return;
     }
-    uploadWorker.postMessage([API_URL, batch]);
+    uploadWorker.postMessage([API_URL, batch, getAxiosAuthHeader()]);
     setProgress((prev) => {
       return {
         ...prev,
