@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, globalShortcut } from 'electron';
+import { app, shell, BrowserWindow, globalShortcut, Tray, Menu } from 'electron';
 import { join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import icon from '../../resources/icon.png?asset';
@@ -16,12 +16,41 @@ function createWindow(): void {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false,
     },
+    icon: icon,
+  });
+
+  const tray = new Tray(icon);
+
+  tray.setContextMenu(
+    Menu.buildFromTemplate([
+      {
+        label: 'Show App',
+        click: function () {
+          mainWindow.show();
+        },
+      },
+      {
+        label: 'Quit',
+        click: function () {
+          app.quit();
+        },
+      },
+    ]),
+  );
+
+  tray.on('click', () => {
+    mainWindow.show();
   });
 
   captureHandler.addHandles();
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show();
+  });
+
+  mainWindow.on('minimize', (e) => {
+    e.preventDefault();
+    mainWindow.hide();
   });
 
   mainWindow.webContents.setWindowOpenHandler((details) => {

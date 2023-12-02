@@ -158,7 +158,7 @@ export const Dashboard = () => {
     await Promise.all(
       ids.map(
         (id) =>
-          new Promise(async (res, rej) => {
+          new Promise(async (res, _) => {
             if (!user?._id) {
               return res(id);
             }

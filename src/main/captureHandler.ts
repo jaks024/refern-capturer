@@ -146,7 +146,6 @@ const AddHandles = () => {
         return { id: x.id, name: x.name };
       });
     currentSource = data[0].id;
-    console.log(data);
     return data;
   });
 
@@ -164,8 +163,6 @@ const AddHandles = () => {
     console.log('load all capture');
     const metas = metaStore.get(STORE_IMAGE_META);
     const raws = rawsStore.get(STORE_IMAGE_RAWS);
-    console.log(metas);
-    console.log(raws);
     return Object.entries(metas).map((meta): CacheData => {
       return {
         ...meta[1],

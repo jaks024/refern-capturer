@@ -141,7 +141,11 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
             </div>
             <div className="text-xs text-neutral-400">
               find your custom access code in your{' '}
-              <a href="refern.app/settings" className="text-indigo-400 font-black underline">
+              <a
+                href="https://my.refern.app/settings"
+                target="_blank"
+                className="text-indigo-400 font-black underline"
+              >
                 settings page
               </a>{' '}
               in refern.
